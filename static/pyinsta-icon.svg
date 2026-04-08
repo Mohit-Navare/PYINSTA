@@ -1,0 +1,42 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconBg" x1="34" y1="24" x2="224" y2="230" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD76A"/>
+      <stop offset="0.33" stop-color="#FF8A63"/>
+      <stop offset="0.68" stop-color="#F14793"/>
+      <stop offset="1" stop-color="#8F63FF"/>
+    </linearGradient>
+    <linearGradient id="iconGlass" x1="66" y1="54" x2="190" y2="196" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#FFF4FE" stop-opacity="0.72"/>
+    </linearGradient>
+    <radialGradient id="lensGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(44)">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.35" stop-color="#FFD9F1"/>
+      <stop offset="0.7" stop-color="#F36AA5"/>
+      <stop offset="1" stop-color="#8F63FF"/>
+    </radialGradient>
+    <filter id="iconShadow" x="6" y="8" width="244" height="244" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="14"/>
+      <feGaussianBlur stdDeviation="14"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.756863 0 0 0 0 0.32549 0 0 0 0 0.65098 0 0 0 0.34 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#iconShadow)">
+    <rect x="28" y="22" width="200" height="200" rx="56" fill="url(#iconBg)"/>
+    <rect x="46" y="40" width="164" height="164" rx="48" fill="url(#iconGlass)" fill-opacity="0.18" stroke="white" stroke-opacity="0.3"/>
+    <path d="M78 108C78 90.3269 92.3269 76 110 76H146C163.673 76 178 90.3269 178 108V144C178 161.673 163.673 176 146 176H110C92.3269 176 78 161.673 78 144V108Z" fill="url(#iconGlass)"/>
+    <path d="M90 110C90 98.9543 98.9543 90 110 90H146C157.046 90 166 98.9543 166 110V144C166 155.046 157.046 164 146 164H110C98.9543 164 90 155.046 90 144V110Z" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="4"/>
+    <circle cx="128" cy="127" r="31" fill="url(#lensGlow)"/>
+    <circle cx="128" cy="127" r="18" fill="#FFF7FD" fill-opacity="0.95"/>
+    <circle cx="128" cy="127" r="9" fill="#C73A80"/>
+    <circle cx="153" cy="101" r="8" fill="#FFFFFF"/>
+    <path d="M86 73L91 84L103 86L94 95L96 108L86 102L75 108L77 95L68 86L80 84L86 73Z" fill="#FFF2B8" fill-opacity="0.95"/>
+    <path d="M104 58C124 47 148 49 167 62" stroke="white" stroke-opacity="0.6" stroke-width="7" stroke-linecap="round"/>
+  </g>
+</svg>

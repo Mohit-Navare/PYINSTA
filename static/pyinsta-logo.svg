@@ -1,0 +1,39 @@
+<svg width="860" height="240" viewBox="0 0 860 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="brandGradient" x1="38" y1="18" x2="230" y2="222" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD76A"/>
+      <stop offset="0.33" stop-color="#FF8A63"/>
+      <stop offset="0.68" stop-color="#F14793"/>
+      <stop offset="1" stop-color="#8F63FF"/>
+    </linearGradient>
+    <linearGradient id="wordGradient" x1="248" y1="48" x2="720" y2="188" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D93B84"/>
+      <stop offset="0.45" stop-color="#F46F84"/>
+      <stop offset="1" stop-color="#8E61FF"/>
+    </linearGradient>
+    <filter id="brandShadow" x="0" y="0" width="860" height="240" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="14"/>
+      <feGaussianBlur stdDeviation="16"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.756863 0 0 0 0 0.32549 0 0 0 0 0.65098 0 0 0 0.24 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#brandShadow)">
+    <rect x="36" y="30" width="156" height="156" rx="44" fill="url(#brandGradient)"/>
+    <rect x="52" y="46" width="124" height="124" rx="36" fill="white" fill-opacity="0.15" stroke="white" stroke-opacity="0.3"/>
+    <path d="M74 98C74 78.1178 90.1177 62 110 62H118C137.882 62 154 78.1177 154 98V118C154 137.882 137.882 154 118 154H110C90.1178 154 74 137.882 74 118V98Z" fill="#FFF9FE" fill-opacity="0.92"/>
+    <path d="M84 100C84 85.6406 95.6406 74 110 74H118C132.359 74 144 85.6406 144 100V118C144 132.359 132.359 144 118 144H110C95.6406 144 84 132.359 84 118V100Z" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="4"/>
+    <circle cx="114" cy="109" r="24" fill="url(#brandGradient)"/>
+    <circle cx="114" cy="109" r="13" fill="#FFF8FE" fill-opacity="0.94"/>
+    <circle cx="114" cy="109" r="6.5" fill="#C73A80"/>
+    <circle cx="136" cy="87" r="6.5" fill="#FFFFFF"/>
+    <path d="M82 60L87 70L98 72L90 80L92 91L82 86L72 91L74 80L66 72L77 70L82 60Z" fill="#FFF1B7"/>
+
+    <text x="228" y="112" fill="url(#wordGradient)" font-size="84" font-weight="700" letter-spacing="0.2" font-family="Cormorant Garamond, Georgia, serif">PyInsta</text>
+    <text x="232" y="152" fill="#9E6AA7" font-size="24" letter-spacing="4" font-family="Space Grotesk, Arial, sans-serif">SOCIAL SPARK</text>
+  </g>
+</svg>
