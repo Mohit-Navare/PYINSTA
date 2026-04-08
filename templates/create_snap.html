@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Create Snap - PyInsta{% endblock %}
+
+{% block content %}
+<!-- Create Post Card -->
+<div class="create-card">
+    <div class="page-title-row">
+        <h2>Create Post</h2>
+        <p>Upload your visuals and craft a polished caption.</p>
+    </div>
+
+    <!-- Upload Form -->
+    <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="images">Select images or videos</label>
+            <input type="file" id="images" name="images" accept="image/*,video/*" multiple required>
+            <small>Supported: JPG, JPEG, PNG, GIF, WEBP, MP4, WEBM, OGG, MOV, MKV, AVI, FLV. Max 50MB each.</small>
+        </div>
+
+        <div class="form-group">
+            <label for="caption">Caption (optional)</label>
+            <textarea id="caption" name="caption" placeholder="Write a caption..." rows="4" maxlength="2000"></textarea>
+            <small id="char-count">0 / 2000</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Publish</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const textarea = document.getElementById('caption');
+    const charCount = document.getElementById('char-count');
+
+    if (!textarea || !charCount) return;
+
+    textarea.addEventListener('input', function () {
+        charCount.textContent = this.value.length + ' / 2000';
+    });
+});
+</script>
+{% endblock %}
