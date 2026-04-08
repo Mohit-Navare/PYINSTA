@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Search - PyInsta{% endblock %}
+
+{% block content %}
+<div class="create-card">
+    <div class="page-title-row">
+        <h2>Search People</h2>
+        <p>Discover creators by username or real name.</p>
+    </div>
+    <form method="GET" action="{{ url_for('search') }}" class="search-form">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search username or name">
+        <button type="submit" class="btn">Search</button>
+    </form>
+</div>
+
+<div class="feed">
+    {% for user in results %}
+    <article class="post">
+        <div class="post-header">
+            <div class="post-owner">
+                <img src="{{ user.profile_image_url }}" alt="{{ user.username }} avatar" loading="lazy" decoding="async">
+                <a href="{{ url_for('view_profile', username=user.username) }}">@{{ user.username }}</a>
+            </div>
+            <small>{{ user.followers_count }} followers</small>
+        </div>
+        <div class="post-caption">{{ user.name }}</div>
+        <div class="post-actions">
+            <a href="{{ url_for('view_profile', username=user.username) }}" class="action-btn">Open Profile</a>
+        </div>
+    </article>
+    {% else %}
+    {% if query %}
+    <article class="post">
+        <div class="post-caption"><strong>No users found for "{{ query }}".</strong></div>
+    </article>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}
