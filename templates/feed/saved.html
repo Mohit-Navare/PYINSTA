@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Saved - PyInsta{% endblock %}
+
+{% block content %}
+<section class="saved-shell">
+    <div class="saved-hero profile-card">
+        <div class="saved-hero-copy">
+            <p class="saved-kicker">Private collection</p>
+            <h1>Saved</h1>
+            <p>Everything you bookmarked lives here in a clean gallery view.</p>
+        </div>
+        <div class="saved-summary">
+            <strong>{{ saved_posts|length }}</strong>
+            <span>{{ 'Post' if saved_posts|length == 1 else 'Posts' }}</span>
+        </div>
+    </div>
+
+    {% if saved_posts %}
+    <div class="gallery saved-gallery">
+        {% for post in saved_posts %}
+        <article class="gallery-item saved-gallery-item">
+            {% set thumb = post.primary_media %}
+            {% if thumb %}
+                {% if thumb.is_video %}
+                <video class="saved-gallery-media" muted preload="metadata" src="{{ thumb.url }}"></video>
+                {% else %}
+                <img
+                    class="saved-gallery-media open-full"
+                    data-src="{{ thumb.url }}"
+                    src="{{ thumb.url }}"
+                    data-images="{% for img in post.image_urls %}{{ img }}{% if not loop.last %},{% endif %}{% endfor %}"
+                    alt="Saved post by {{ post.username }}"
+                    loading="lazy"
+                    decoding="async">
+                {% endif %}
+            {% endif %}
+
+            <div class="saved-gallery-topbar">
+                <a class="saved-gallery-user" href="{{ url_for('view_profile', username=post.username) }}">
+                    <img src="{{ post.owner_profile_image_url }}" alt="{{ post.username }} avatar" loading="lazy" decoding="async">
+                    <span>@{{ post.username }}</span>
+                </a>
+            </div>
+
+            <div class="gallery-overlay saved-gallery-overlay">
+                <div class="saved-gallery-stats">
+                    <span>Likes {{ post.likes|length }}</span>
+                    <span>Comments {{ post.comments|default([])|length }}</span>
+                </div>
+                {% if post.caption %}
+                <p class="saved-gallery-caption">{{ post.caption }}</p>
+                {% endif %}
+                <div class="saved-gallery-actions">
+                    <form method="POST" action="{{ url_for('save_post', post_id=post._id) }}" class="inline-form">
+                        <button type="submit" class="overlay-link overlay-button">Unsave</button>
+                    </form>
+                    <a class="overlay-link" href="{{ url_for('download_post', post_id=post._id) }}">Download</a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <article class="post">
+        <div class="post-caption">
+            <strong>No saved posts yet.</strong> Tap Save on any post from the feed or profile to keep it here.
+        </div>
+    </article>
+    {% endif %}
+</section>
+{% endblock %}
