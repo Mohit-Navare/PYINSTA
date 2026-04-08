@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Pyinsta{% endblock %}</title>
+
+    <!-- Shared Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<div class="bg-orb bg-orb-a"></div>
+<div class="bg-orb bg-orb-b"></div>
+<div class="bg-grid"></div>
+
+<!-- App Header -->
+<header class="header {% block header_class %}{% endblock %}">
+    <a class="logo" href="{{ url_for('home') }}">
+        <img class="logo-icon" src="{{ url_for('static', filename='branding/pyinsta-icon.svg') }}" alt="PyInsta logo">
+        <span class="logo-text">PyInsta</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Primary navigation">
+        {% if session.username %}
+            <a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}is-active{% endif %}">Feed</a>
+            <a href="{{ url_for('create_snap') }}" class="{% if request.endpoint in ['create_snap', 'upload'] %}is-active{% endif %}">Create</a>
+            <a href="{{ url_for('notifications') }}" class="{% if request.endpoint in ['notifications', 'mark_notifications_read'] %}is-active{% endif %}">Alerts{% if unread_notifications %} ({{ unread_notifications }}){% endif %}</a>
+            <a href="{{ url_for('saved_posts') }}" class="{% if request.endpoint == 'saved_posts' %}is-active{% endif %}">Saved</a>
+            <a href="{{ url_for('settings') }}" class="{% if request.endpoint == 'settings' %}is-active{% endif %}">Settings</a>
+            <a href="{{ url_for('profile') }}" class="{% if request.endpoint in ['profile', 'view_profile', 'profile_connections', 'change_profile_pic'] %}is-active{% endif %}">Profile</a>
+        {% endif %}
+    </nav>
+
+    <div class="auth-buttons">
+        {% if session.username %}
+            <form method="GET" action="{{ url_for('search') }}" class="header-search-form">
+                <input type="text" name="q" placeholder="Search users" value="{{ request.args.get('q', '') if request.endpoint == 'search' else '' }}">
+            </form>
+            <span class="user-pill">@{{ session.username }}</span>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}#login-section" class="login-btn">Login</a>
+            <a href="{{ url_for('register') }}" class="signup-btn">Sign up</a>
+        {% endif %}
+    </div>
+</header>
+
+<!-- Global Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                    <button type="button" class="close-alert" aria-label="Close">&times;</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Main Page Content -->
+<main class="page-main">
+    {% block hero %}{% endblock %}
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+{% if session.username %}
+<nav class="mobile-dock" aria-label="Mobile quick navigation">
+    <a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}is-active{% endif %}">Feed</a>
+    <a href="{{ url_for('create_snap') }}" class="{% if request.endpoint in ['create_snap', 'upload'] %}is-active{% endif %}">Create</a>
+    <a href="{{ url_for('saved_posts') }}" class="{% if request.endpoint == 'saved_posts' %}is-active{% endif %}">Saved</a>
+    <a href="{{ url_for('profile') }}" class="{% if request.endpoint in ['profile', 'view_profile', 'profile_connections', 'change_profile_pic'] %}is-active{% endif %}">Profile</a>
+</nav>
+{% endif %}
+
+<!-- Shared Lightbox -->
+<div id="lightbox" class="lightbox" aria-hidden="true">
+    <div class="lightbox-inner">
+        <button class="lightbox-close" aria-label="Close">&times;</button>
+        <button class="lightbox-prev" aria-label="Previous">&lsaquo;</button>
+        <img id="lightbox-img" src="" alt="Full image">
+        <button class="lightbox-next" aria-label="Next">&rsaquo;</button>
+    </div>
+</div>
+
+<!-- Profile Image Preview -->
+<div id="profile-preview-modal" class="profile-preview-modal" aria-hidden="true">
+    <div class="profile-preview-inner">
+        <button class="profile-preview-close" type="button" aria-label="Close">&times;</button>
+        <img id="profile-preview-img" src="" alt="Profile preview">
+    </div>
+</div>
+
+<!-- Shared UI Scripts -->
+<script src="{{ url_for('static', filename='js/app-ui.js') }}" defer></script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>
+
