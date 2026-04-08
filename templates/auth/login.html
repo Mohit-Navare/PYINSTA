@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Login - Pyinsta{% endblock %}
+{% block body_class %}auth-entry-body{% endblock %}
+{% block header_class %}header-auth-shell{% endblock %}
+
+{% block hero %}
+<section class="hero-section hero-fullscreen premium-hero premium-hero-enhanced" data-hero-parallax>
+  <div class="hero-ambient hero-ambient-a"></div>
+  <div class="hero-ambient hero-ambient-b"></div>
+  <div class="hero-ambient hero-ambient-c"></div>
+  <div class="hero-content-stack">
+    <div class="hero-badge">Creator-First Experience</div>
+    <h1 class="hero-title">Design your social presence with a premium visual rhythm.</h1>
+    <p class="hero-subtitle">PyInsta now opens with a floating-image hero crafted for a cleaner, familiar landing experience with depth, motion, and clear entry actions.</p>
+
+    <div class="hero-micro-stats">
+      <div class="hero-stat-pill">
+        <strong data-count-to="120">0</strong>
+        <span>Creative circles active</span>
+      </div>
+      <div class="hero-stat-pill">
+        <strong data-count-to="240">0</strong>
+        <span>Stories published today</span>
+      </div>
+      <div class="hero-stat-pill">
+        <strong data-count-to="980">0</strong>
+        <span>Meaningful interactions</span>
+      </div>
+    </div>
+
+    <div class="hero-story-row">
+      <div class="hero-story-chip"><span>AA</span><small>Art</small></div>
+      <div class="hero-story-chip"><span>MV</span><small>Travel</small></div>
+      <div class="hero-story-chip"><span>RS</span><small>Music</small></div>
+      <div class="hero-story-chip"><span>PK</span><small>Tech</small></div>
+    </div>
+
+    <a href="#login-section" class="hero-scroll-cta">Enter PyInsta</a>
+  </div>
+
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="entry-splash" data-splash>
+  <div class="entry-splash-mark">
+    <img src="{{ url_for('static', filename='branding/pyinsta-icon.svg') }}" alt="PyInsta logo">
+    <span>PyInsta</span>
+  </div>
+  <p class="entry-splash-copy">Your social world starts here.</p>
+</div>
+
+<section class="login-content-flow">
+  <div id="login-section" class="auth-page">
+    <div class="auth-container auth-container-premium" data-login-card>
+      <div class="auth-card-glow"></div>
+      <div class="auth-topline">
+        <span class="auth-live-dot"></span>
+        <span>Secure access</span>
+      </div>
+
+      <div class="auth-hero auth-hero-premium">
+        <div class="auth-logo-lockup">
+          <img src="{{ url_for('static', filename='branding/pyinsta-icon.svg') }}" alt="PyInsta icon">
+          <span>PyInsta</span>
+        </div>
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Log in to open your feed, stories, and profile in the new light Instagram-style UI.</p>
+      </div>
+
+      <div class="auth-preview-strip">
+        <div class="auth-preview-item">
+          <strong>Stories</strong>
+          <span>Alive and moving</span>
+        </div>
+        <div class="auth-preview-item">
+          <strong>Feed</strong>
+          <span>Clean and vibrant</span>
+        </div>
+        <div class="auth-preview-item">
+          <strong>Profile</strong>
+          <span>Better presentation</span>
+        </div>
+      </div>
+
+      <form id="login" class="auth-form active" method="post">
+        <div class="input-wrap premium-input-wrap">
+          <span class="input-icon input-icon-premium">@</span>
+          <input type="text" name="username" placeholder="Username" autocomplete="username" required>
+        </div>
+        <div class="input-wrap premium-input-wrap">
+          <span class="input-icon input-icon-premium">#</span>
+          <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="auth-submit-animated auth-submit-rich">Login</button>
+      </form>
+
+      <div class="auth-links auth-links-split">
+        <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
+        <a href="{{ url_for('register') }}">New here? Create an account</a>
+      </div>
+    </div>
+  </div>
+
+  <section class="feature-stack" aria-label="Platform highlights">
+    <article class="feature-card">
+      <h3>Stories Feel Alive</h3>
+      <p>Floating visuals, polished cards, and faster interactions give the app a more social-first feel.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Clean Light Theme</h3>
+      <p>Soft pinks, warm highlights, and Instagram-like gradients keep the whole project bright and premium.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Familiar Landing Flow</h3>
+      <p>Your earlier hero section is back, with the smoother motion and upgraded UI preserved around it.</p>
+    </article>
+  </section>
+
+  <section id="about-section" class="about-block about-plain">
+    <h2 class="about-title">About Pyinsta</h2>
+    <p class="about-line" data-text="Pyinsta is a social app experience inspired by the clarity and rhythm of Instagram."></p>
+    <p class="about-line" data-text="It helps you register, post photos and videos, and manage your profile in one place."></p>
+    <p class="about-line" data-text="Now it keeps the classic hero page while matching the new premium light theme."></p>
+  </section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/auth-login.js') }}" defer></script>
+{% endblock %}
