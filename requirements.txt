@@ -3,3 +3,5 @@ python-dotenv>=1.0
 pymongo>=4.6
 dnspython>=2.6
 email-validator>=2.1
+gunicorn
+Werkzeug
