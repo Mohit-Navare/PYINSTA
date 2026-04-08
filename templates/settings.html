@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Settings - PyInsta{% endblock %}
+
+{% block content %}
+<div class="create-card settings-card">
+    <div class="page-title-row">
+        <h2>Account Settings</h2>
+        <p>Manage identity, profile presence, and recovery details in one place.</p>
+    </div>
+    <form method="POST" action="{{ url_for('settings') }}" class="inline-upload" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="profile">
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name" value="{{ user.name }}" required>
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" value="{{ user.email }}" required>
+        <label for="phone">Phone</label>
+        <input type="text" name="phone" id="phone" value="{{ user.phone }}">
+        <label for="gender">Gender</label>
+        <select name="gender" id="gender">
+            <option value="Male" {% if user.gender == 'Male' %}selected{% endif %}>Male</option>
+            <option value="Female" {% if user.gender == 'Female' %}selected{% endif %}>Female</option>
+            <option value="Other" {% if user.gender == 'Other' %}selected{% endif %}>Other</option>
+        </select>
+        <label for="bio">Bio</label>
+        <textarea name="bio" id="bio" maxlength="500" class="bio-input" placeholder="Tell people what you create, care about, or want to be known for.">{{ user.bio }}</textarea>
+        <label class="file-label" for="profile_image">Profile photo</label>
+        <input type="file" name="profile_image" accept="image/*" id="profile_image">
+        <label class="file-label">
+            <input type="checkbox" name="reset_profile_image" value="1">
+            Reset to default avatar
+        </label>
+        <button class="btn" type="submit">Update Profile</button>
+    </form>
+</div>
+
+<div class="create-card settings-card">
+    <h2>Password</h2>
+    <form method="POST" action="{{ url_for('settings') }}" class="inline-upload" id="password-change-form" autocomplete="off">
+        <input type="hidden" name="action" value="password">
+        <label for="current_password">Current Password</label>
+        <input type="password" name="current_password" id="current_password" autocomplete="current-password" required>
+        <label for="new_password">New Password</label>
+        <input type="password" name="new_password" id="new_password" autocomplete="new-password" required minlength="6">
+        <label for="confirm_password">Confirm New Password</label>
+        <input type="password" name="confirm_password" id="confirm_password" autocomplete="new-password" required minlength="6">
+        <button class="btn" type="submit">Change Password</button>
+    </form>
+</div>
+
+<div class="create-card danger-zone">
+    <h2>Delete Account</h2>
+    <p class="bio">This action permanently deletes your account, posts, likes, comments, and uploaded files.</p>
+    <form method="POST" action="{{ url_for('delete_account') }}" class="inline-upload" onsubmit="return confirm('This is permanent. Delete account?');">
+        <label for="confirm_username">Type your username to confirm: <strong>{{ user.username }}</strong></label>
+        <input type="text" name="confirm_username" id="confirm_username" required>
+        <button class="btn delete-account-btn" type="submit">Delete My Account</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const passwordForm = document.getElementById("password-change-form");
+    const newPasswordInput = document.getElementById("new_password");
+    const confirmPasswordInput = document.getElementById("confirm_password");
+
+    if (!passwordForm || !newPasswordInput || !confirmPasswordInput) {
+        return;
+    }
+
+    function syncPasswordConfirmationState() {
+        if (!confirmPasswordInput.value) {
+            confirmPasswordInput.setCustomValidity("");
+            return;
+        }
+
+        if (newPasswordInput.value !== confirmPasswordInput.value) {
+            confirmPasswordInput.setCustomValidity("New passwords do not match.");
+            return;
+        }
+
+        confirmPasswordInput.setCustomValidity("");
+    }
+
+    newPasswordInput.addEventListener("input", syncPasswordConfirmationState);
+    confirmPasswordInput.addEventListener("input", syncPasswordConfirmationState);
+
+    passwordForm.addEventListener("submit", function () {
+        syncPasswordConfirmationState();
+    });
+});
+</script>
+{% endblock %}
