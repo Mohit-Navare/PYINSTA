@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="feed feed-only">
+        {% for post in feed %}
+        {% set is_liked = session.username in post.likes %}
+        <article class="post likeable-post" data-post-id="{{ post._id }}" data-liked="{{ 'true' if is_liked else 'false' }}">
+        <!-- Post Header -->
+        <div class="post-header">
+            <div class="post-owner">
+                <img src="{{ post.owner_profile_image_url }}" alt="{{ post.username }} avatar" loading="lazy" decoding="async">
+                <a href="{{ url_for('view_profile', username=post.username) }}">@{{ post.username }}</a>
+            </div>
+            <small class="post-time-label">{{ post.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+        </div>
+
+        <!-- Post Media -->
+        {% set thumb = post.primary_media %}
+        {% if thumb %}
+            <div class="post-media-frame">
+            {% if thumb.is_video %}
+                <video controls class="post-video" preload="metadata">
+                    <source src="{{ thumb.url }}" type="{{ thumb.content_type }}">
+                </video>
+            {% else %}
+                <img
+                    src="{{ thumb.url }}"
+                    class="post-img open-full"
+                    data-src="{{ thumb.url }}"
+                    data-images="{% for img in post.image_urls %}{{ img }}{% if not loop.last %},{% endif %}{% endfor %}"
+                    alt="Post by {{ post.username }}"
+                    loading="lazy"
+                    decoding="async">
+            {% endif %}
+            </div>
+        {% endif %}
+
+        {% set post_comments = post.comments|default([]) %}
+
+        <div class="post-ig-actions">
+            <div class="post-ig-actions-main">
+                <form method="POST" action="{{ url_for('like_post', post_id=post._id) }}" class="inline-form like-form">
+                    <button type="submit" class="ig-icon-btn like-icon-btn {% if is_liked %}liked{% endif %}" aria-label="Like post">
+                        <svg class="ig-icon ig-icon-heart" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 0 12 5.892a4.99 4.99 0 0 0-4.792-1.988C4.424 4.18 2.25 6.637 2.25 9.6c0 2.922 1.515 5.245 4.782 8.241 1.57 1.44 3.394 2.975 4.968 4.159 1.574-1.184 3.398-2.719 4.968-4.159 3.267-2.996 4.782-5.319 4.782-8.241 0-2.963-2.174-5.42-4.958-5.696Z"></path>
+                        </svg>
+                    </button>
+                </form>
+                <button type="button" class="ig-icon-btn comment-icon-btn toggle-comments" data-post-id="{{ post._id }}" aria-label="Open comments">
+                    <svg class="ig-icon ig-icon-comment" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20.25 11.25c0 4.97-4.142 9-9.25 9a9.82 9.82 0 0 1-4.162-.918L3 20.25l.999-3.39A8.69 8.69 0 0 1 1.75 11.25c0-4.97 4.142-9 9.25-9s9.25 4.03 9.25 9Z"></path>
+                    </svg>
+                </button>
+                <a href="{{ url_for('download_post', post_id=post._id) }}" class="ig-icon-btn download-icon-btn" aria-label="Download post">
+                    <svg class="ig-icon ig-icon-download" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3.75v11.5"></path>
+                        <path d="m7.75 11.75 4.25 4.25 4.25-4.25"></path>
+                        <path d="M4.75 19.25h14.5"></path>
+                    </svg>
+                </a>
+            </div>
+            <div class="post-ig-actions-side">
+                <form method="POST" action="{{ url_for('save_post', post_id=post._id) }}" class="inline-form save-form">
+                    <button type="submit" class="ig-icon-btn save-icon-btn {% if post.is_saved %}saved{% endif %}" aria-label="Save post">
+                        <svg class="ig-icon ig-icon-bookmark" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M6.75 3.75h10.5a1.5 1.5 0 0 1 1.5 1.5v15l-6.75-4.5-6.75 4.5v-15a1.5 1.5 0 0 1 1.5-1.5Z"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="post-social-stack">
+            <div class="post-likes-line"><span class="like-count">{{ post.likes|length }}</span> likes</div>
+
+            {% if post.caption %}
+            <div class="post-caption-line">
+                <strong>{{ post.username }}</strong>
+                <span>{{ post.caption }}</span>
+            </div>
+            {% endif %}
+
+            {% if post_comments %}
+                {% if post_comments|length > 2 %}
+                <button type="button" class="view-comments-btn toggle-comments" data-post-id="{{ post._id }}">View all <span class="comment-count">{{ post_comments|length }}</span> {{ 'comment' if post_comments|length == 1 else 'comments' }}</button>
+                {% else %}
+                <div class="view-comments-btn view-comments-label"><span class="comment-count">{{ post_comments|length }}</span> {{ 'comment' if post_comments|length == 1 else 'comments' }}</div>
+                {% endif %}
+
+                <div class="comment-preview-list">
+                    {% for comment in post_comments[-2:] %}
+                    <div class="comment-inline">
+                        <strong>{{ comment.username }}</strong>
+                        <span>{{ comment.text }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="view-comments-btn view-comments-label"><span class="comment-count">0</span> comments</div>
+            {% endif %}
+
+        </div>
+
+        {% if session.username == post.username %}
+        <div class="post-actions owner-edit-strip">
+            <form method="POST" action="{{ url_for('edit_post', post_id=post._id) }}" class="inline-form caption-edit-form">
+                <input type="text" name="caption" value="{{ post.caption }}" maxlength="2000" placeholder="Edit caption">
+                <button type="submit" class="action-btn">Update Caption</button>
+            </form>
+            <form method="POST" action="{{ url_for('delete_post', post_id=post._id) }}" class="inline-form" onsubmit="return confirm('Delete this post?');">
+                <button type="submit" class="action-btn">Delete</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Comments -->
+        <div class="comments-section is-hidden" id="comments-{{ post._id }}">
+            {% for comment in post_comments %}
+            <div class="comment">
+                <div class="comment-header">
+                    <strong>{{ comment.username }}</strong>
+                    <small>{{ comment.created_at.strftime('%d %b %Y') if comment.created_at else 'Just now' }}</small>
+                    {% if session.username == comment.username %}
+                    <form method="POST" action="{{ url_for('delete_comment', post_id=post._id, comment_index=loop.index0) }}" class="inline-form">
+                        <button type="submit" class="delete-comment-btn" title="Delete comment">Delete</button>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="comment-text">{{ comment.text }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <form method="POST" action="{{ url_for('comment_post', post_id=post._id) }}" class="comment-form ig-comment-form">
+            <input id="comment-input-{{ post._id }}" type="text" name="comment" placeholder="Add a comment..." required maxlength="500">
+            <button type="submit" class="comment-submit-btn" disabled>Post</button>
+        </form>
+        </article>
+        {% else %}
+        <article class="post">
+            <div class="post-caption">
+                <strong>No posts yet.</strong> Start by creating your first post from the Create page.
+            </div>
+        </article>
+        {% endfor %}
+
+        {% if feed %}
+        <div class="feed-loading">Scroll for more posts.</div>
+        {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/feed-home.js') }}" defer></script>
+{% endblock %}
