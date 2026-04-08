@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Register - PyInsta{% endblock %}
+
+{% block content %}
+<!-- Registration Page -->
+<div class="auth-page">
+  <div class="auth-container">
+    <h2>Create Account</h2>
+    <p class="auth-subtitle">Start your profile in less than a minute.</p>
+
+    <!-- Registration Form -->
+    <form id="register-form" class="auth-form active" method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data">
+      <div class="input-wrap">
+        <span class="input-icon">A</span>
+        <input name="name" placeholder="Full Name" required>
+      </div>
+      <div class="input-wrap">
+        <span class="input-icon">@</span>
+        <input name="username" placeholder="Username (3-20 chars, letters/numbers/_)" required minlength="3" maxlength="20">
+      </div>
+      <div class="input-wrap">
+        <span class="input-icon">M</span>
+        <input type="email" name="email" placeholder="Email" required>
+      </div>
+      <div class="input-wrap">
+        <span class="input-icon">P</span>
+        <input name="phone" placeholder="Phone Number (optional)" pattern="[0-9\s\-\+\(\)]{10,}">
+      </div>
+
+      <select name="gender" required>
+        <option value="">Select Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label for="profile_image">Profile Picture (optional)</label>
+      <input type="file" name="profile_image" accept="image/*" id="profile_image">
+
+      <div class="input-wrap">
+        <span class="input-icon">#</span>
+        <input type="password" name="password" placeholder="Password (min 6 chars, 1 letter + 1 number)" required minlength="6">
+      </div>
+      <div class="input-wrap">
+        <span class="input-icon">#</span>
+        <input type="password" name="confirm_password" placeholder="Confirm Password" required minlength="6">
+      </div>
+
+      <button type="submit" class="auth-submit-animated">Create Account</button>
+    </form>
+
+    <!-- Registration Footer -->
+    <div class="auth-links">
+      <a href="{{ url_for('login') }}">Already have an account? Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
