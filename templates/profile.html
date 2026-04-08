@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Profile Card -->
+<div class="profile profile-card">
+    <div class="page-title-row">
+        <h2>Profile</h2>
+        <p>Your posts, identity, and audience at a glance.</p>
+    </div>
+
+    <!-- Profile Header -->
+    <div class="profile-top">
+        <div class="avatar-wrap">
+            <img src="{{ user.profile_image_url }}" class="avatar" alt="{{ user.username }} profile picture" loading="eager" decoding="async">
+        </div>
+
+        <div class="profile-meta">
+            <div class="profile-row">
+                <div>
+                    <h2>{{ user.username }}</h2>
+                    <p class="profile-name">{{ user.name }}</p>
+                </div>
+
+                {% if is_owner %}
+                <div class="owner-actions">
+                    <button id="edit-btn" class="btn btn-sm" type="button">Edit profile</button>
+                    <a href="{{ url_for('settings') }}" class="btn btn-sm btn-ghost">Account settings</a>
+
+                    <div id="edit-form-wrap" class="edit-form-wrap">
+                        <form id="profile-edit-form" class="inline-upload" method="POST" action="{{ url_for('change_profile_pic') }}" enctype="multipart/form-data">
+                            <label class="file-label">Change photo
+                                <input type="file" name="profile_image" accept="image/*" id="profile_image">
+                            </label>
+                            <label for="gender">Gender</label>
+                            <select name="gender" id="gender">
+                                <option value="Male" {% if user.gender == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if user.gender == 'Female' %}selected{% endif %}>Female</option>
+                                <option value="Other" {% if user.gender == 'Other' %}selected{% endif %}>Other</option>
+                            </select>
+                            <label class="file-label">
+                                <input type="checkbox" name="reset_profile_image" value="1">
+                                Use gender default photo
+                            </label>
+                            <textarea name="bio" class="bio-input" placeholder="Write something about yourself..." maxlength="500">{{ user.bio if user.bio }}</textarea>
+                            <div class="owner-edit-actions">
+                                <button class="btn btn-sm" type="submit">Save</button>
+                                <button id="cancel-edit" type="button" class="btn btn-sm btn-ghost">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <form method="POST" action="{{ url_for('follow', username=user.username) }}" class="inline-form">
+                    <button class="btn" type="submit">{{ 'Unfollow' if is_following else 'Follow' }}</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <!-- Profile Stats -->
+            <div class="profile-stats">
+                <div class="stat"><strong>{{ posts|length }}</strong><span>Posts</span></div>
+                <a class="stat stat-link" href="{{ url_for('profile_connections', username=user.username, tab='followers') }}">
+                    <strong>{{ followers_count }}</strong><span>Followers</span>
+                </a>
+                <a class="stat stat-link" href="{{ url_for('profile_connections', username=user.username, tab='following') }}">
+                    <strong>{{ following_count }}</strong><span>Following</span>
+                </a>
+            </div>
+
+            <!-- Profile Bio -->
+            <p class="bio">{{ user.bio if user.bio else 'No bio yet.' }}</p>
+            <div class="profile-meta-line">
+                {% if insights.joined_at %}
+                <span>Joined {{ insights.joined_at.strftime('%d %b %Y') }}</span>
+                {% endif %}
+                {% if insights.last_posted_at %}
+                <span>Last post {{ insights.last_posted_at.strftime('%d %b %Y') }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Uploads Section -->
+    <h3 class="section-title">Uploads</h3>
+    <div class="gallery">
+        {% for post in posts %}
+            <article class="gallery-item">
+                 {% set thumb = post.primary_media %}
+                 {% if thumb %}
+                 {% if thumb.is_video %}
+                 <video controls class="post-video" preload="metadata" src="{{ thumb.url }}"></video>
+                 {% else %}
+                 <img
+                    class="open-full"
+                    data-src="{{ thumb.url }}"
+                    src="{{ thumb.url }}"
+                    data-images="{% for img in post.image_urls %}{{ img }}{% if not loop.last %},{% endif %}{% endfor %}"
+                    alt="Post by {{ user.username }}"
+                    loading="lazy"
+                    decoding="async">
+                 {% endif %}
+
+                     <div class="gallery-overlay">
+                         <div class="overlay-stats">
+                         <span>Likes {{ post.likes|length }}</span>
+                         <span>Comments {{ post.comments|default([])|length }}</span>
+                         <form method="POST" action="{{ url_for('save_post', post_id=post._id) }}" class="inline-form">
+                             <button type="submit" class="overlay-link overlay-button">{{ 'Saved' if post.is_saved else 'Save' }}</button>
+                         </form>
+                         <a class="overlay-link" href="{{ url_for('download_post', post_id=post._id) }}">Download</a>
+                     </div>
+                 </div>
+                 {% endif %}
+
+                 {% if is_owner %}
+                 <form class="delete-post-form" method="POST" action="{{ url_for('delete_post', post_id=post._id) }}" onsubmit="return confirm('Delete this post?');">
+                    <button type="submit" class="delete-btn">Delete</button>
+                 </form>
+                 {% endif %}
+            </article>
+        {% else %}
+            <p>No uploads yet.</p>
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const editBtn = document.getElementById('edit-btn');
+    const formWrap = document.getElementById('edit-form-wrap');
+    const cancelBtn = document.getElementById('cancel-edit');
+    const form = document.getElementById('profile-edit-form');
+
+    if (editBtn && formWrap) {
+        editBtn.addEventListener('click', function () {
+            formWrap.classList.add('show');
+            const textarea = formWrap.querySelector('textarea');
+            if (textarea) textarea.focus();
+        });
+    }
+
+    if (cancelBtn && formWrap) {
+        cancelBtn.addEventListener('click', function () {
+            formWrap.classList.remove('show');
+        });
+    }
+
+    if (form && formWrap) {
+        form.addEventListener('submit', function () {
+            formWrap.classList.remove('show');
+        });
+    }
+});
+</script>
+{% endblock %}
