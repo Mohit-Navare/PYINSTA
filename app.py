@@ -21,6 +21,7 @@ import zipfile
 
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
+from email_validator import EmailNotValidError, validate_email
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, send_file, session, url_for
 from gridfs import GridFS
 from gridfs.errors import NoFile
@@ -31,8 +32,6 @@ from werkzeug.utils import secure_filename
 from config import db as mongo_db
 from config import posts_collection as posts
 from config import users_collection as users
-from models.snap import Snap
-from models.user import User
 
 # =============================
 # Application Setup
@@ -59,6 +58,166 @@ DEFAULT_PROFILE_IMAGES = {
     "Male": "uploads/profile/male_default.svg",
     "Other": "uploads/profile/other_default.svg",
 }
+
+
+# =============================
+# Domain Models
+# =============================
+class User:
+    """User data model with validation methods."""
+
+    VALID_GENDERS = ["Male", "Female", "Other"]
+
+    @staticmethod
+    def validate_username(username: str) -> tuple[bool, str]:
+        """Validate username format."""
+        if not username or len(username) < 3 or len(username) > 20:
+            return False, "Username must be 3-20 characters"
+
+        if not re.match(r"^[a-zA-Z0-9_]+$", username):
+            return False, "Username can only contain letters, numbers, and underscore"
+
+        return True, ""
+
+    @staticmethod
+    def validate_email(email: str) -> tuple[bool, str]:
+        """Validate email format."""
+        try:
+            validate_email(email, check_deliverability=False)
+            return True, ""
+        except EmailNotValidError as e:
+            return False, f"Invalid email: {str(e)}"
+
+    @staticmethod
+    def validate_password(password: str) -> tuple[bool, str]:
+        """Validate password strength."""
+        if not password or len(password) < 6:
+            return False, "Password must be at least 6 characters"
+
+        if not re.search(r"[a-zA-Z]", password):
+            return False, "Password must contain at least one letter"
+
+        if not re.search(r"\d", password):
+            return False, "Password must contain at least one number"
+
+        return True, ""
+
+    @staticmethod
+    def validate_phone(phone: str) -> tuple[bool, str]:
+        """Validate phone format."""
+        if not phone:
+            return True, ""
+
+        clean_phone = re.sub(r"[\s\-\+\(\)]", "", phone)
+        if not clean_phone.isdigit() or len(clean_phone) < 10:
+            return False, "Phone must be at least 10 digits"
+
+        return True, ""
+
+    @staticmethod
+    def validate_gender(gender: str) -> bool:
+        """Validate gender value."""
+        return gender in User.VALID_GENDERS
+
+    @staticmethod
+    def create_user_doc(
+        name: str,
+        username: str,
+        email: str,
+        phone: str,
+        gender: str,
+        password_hash: str,
+        profile_image,
+    ) -> dict:
+        """Create a user document with default values."""
+        return {
+            "name": name,
+            "username": username,
+            "email": email,
+            "phone": phone,
+            "gender": gender,
+            "password": password_hash,
+            "profile_image": profile_image,
+            "bio": "",
+            "followers": [],
+            "following": [],
+            "saved_posts": [],
+            "notifications": [],
+            "created_at": datetime.now(),
+            "updated_at": datetime.now(),
+        }
+
+
+class Snap:
+    """Post/snap data model with validation methods."""
+
+    ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+    ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".webm", ".ogg", ".mov", ".mkv", ".avi", ".flv"}
+    ALLOWED_EXTENSIONS = ALLOWED_IMAGE_EXTENSIONS | ALLOWED_VIDEO_EXTENSIONS
+    MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+
+    @staticmethod
+    def validate_caption(caption: str) -> tuple[bool, str]:
+        """Validate caption length."""
+        if caption is None:
+            return True, ""
+
+        caption = str(caption).strip()
+        if len(caption) > 2000:
+            return False, "Caption must be less than 2000 characters"
+
+        return True, ""
+
+    @staticmethod
+    def validate_file_extension(filename: str) -> bool:
+        """Check if file has an allowed extension."""
+        if not filename:
+            return False
+
+        ext = os.path.splitext(filename)[1].lower()
+        return ext in Snap.ALLOWED_EXTENSIONS
+
+    @staticmethod
+    def validate_file_size(file_obj) -> bool:
+        """Check file size before saving."""
+        file_obj.seek(0, os.SEEK_END)
+        file_size = file_obj.tell()
+        file_obj.seek(0)
+        return file_size <= Snap.MAX_FILE_SIZE
+
+    @staticmethod
+    def is_image(filename: str) -> bool:
+        """Check if file is an image."""
+        ext = os.path.splitext(filename)[1].lower()
+        return ext in Snap.ALLOWED_IMAGE_EXTENSIONS
+
+    @staticmethod
+    def is_video(filename: str) -> bool:
+        """Check if file is a video."""
+        ext = os.path.splitext(filename)[1].lower()
+        return ext in Snap.ALLOWED_VIDEO_EXTENSIONS
+
+    @staticmethod
+    def create_snap_doc(username: str, images: list, caption: str = "") -> dict:
+        """Create a snap/post document."""
+        return {
+            "username": username,
+            "images": images,
+            "caption": caption.strip() if caption else "",
+            "likes": [],
+            "comments": [],
+            "created_at": datetime.now(),
+            "updated_at": datetime.now(),
+        }
+
+    @staticmethod
+    def create_comment_doc(username: str, comment_text: str) -> dict:
+        """Create a comment document."""
+        return {
+            "username": username,
+            "text": comment_text.strip(),
+            "created_at": datetime.now(),
+        }
 
 
 # =============================
