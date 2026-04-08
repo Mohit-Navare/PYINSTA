@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Connections - {{ user.username }}{% endblock %}
+
+{% block content %}
+<section class="profile profile-card connections-card">
+    <div class="page-title-row">
+        <h2>@{{ user.username }}</h2>
+        <p>Followers and following list</p>
+    </div>
+
+    <div class="connections-tabs" role="tablist" aria-label="Followers and following">
+        <a
+            class="connections-tab {{ 'active' if active_tab == 'followers' else '' }}"
+            href="{{ url_for('profile_connections', username=user.username, tab='followers') }}">
+            Followers ({{ followers|length }})
+        </a>
+        <a
+            class="connections-tab {{ 'active' if active_tab == 'following' else '' }}"
+            href="{{ url_for('profile_connections', username=user.username, tab='following') }}">
+            Following ({{ following|length }})
+        </a>
+    </div>
+
+    <div class="connections-list">
+        {% for item in active_list %}
+        <article class="connections-item">
+            <a class="connections-user" href="{{ url_for('view_profile', username=item.username) }}">
+                <img src="{{ item.profile_image_url }}" alt="{{ item.username }} profile picture" loading="lazy" decoding="async">
+                <span>
+                    <strong>@{{ item.username }}</strong>
+                    <small>{{ item.name }}</small>
+                </span>
+            </a>
+            <a class="btn btn-sm" href="{{ url_for('view_profile', username=item.username) }}">View Profile</a>
+        </article>
+        {% else %}
+        <div class="connections-empty">
+            No users in this section yet.
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
