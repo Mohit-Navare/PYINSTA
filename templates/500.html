@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Server Error - PyInsta{% endblock %}
+
+{% block content %}
+<section class="feed">
+    <article class="post" style="text-align:center; padding: 3rem 1.5rem;">
+        <h1 style="margin:0; font-size: 3rem;">500</h1>
+        <h2>Server error</h2>
+        <p class="empty-text">Something went wrong on our side. Please try again shortly.</p>
+        <a href="{{ url_for('home') }}" class="btn" style="margin-top: 1rem; display: inline-block;">Back to Feed</a>
+    </article>
+</section>
+{% endblock %}
