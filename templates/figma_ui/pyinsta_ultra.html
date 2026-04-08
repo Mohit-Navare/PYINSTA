@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PyInsta Ultra</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui"],
+            display: ["Sora", "Inter", "ui-sans-serif", "system-ui"]
+          },
+          boxShadow: {
+            glow: "0 0 0 1px rgba(255,255,255,.2), 0 20px 60px rgba(98,76,245,.28)",
+            soft: "0 12px 34px rgba(20,24,48,.12)"
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --a1: #5a3ff2;
+      --a2: #ec4cb5;
+      --a3: #1fb6ff;
+    }
+    body {
+      background: radial-gradient(1200px 600px at 8% -10%, rgba(90,63,242,.20), transparent 60%),
+                  radial-gradient(900px 550px at 95% 0%, rgba(236,76,181,.18), transparent 55%),
+                  radial-gradient(900px 550px at 50% 120%, rgba(31,182,255,.18), transparent 55%),
+                  #f8f9ff;
+    }
+    .dark body {
+      background: radial-gradient(1200px 600px at 8% -10%, rgba(90,63,242,.22), transparent 60%),
+                  radial-gradient(900px 550px at 95% 0%, rgba(236,76,181,.20), transparent 55%),
+                  radial-gradient(900px 550px at 50% 120%, rgba(31,182,255,.20), transparent 55%),
+                  #090b14;
+    }
+    .glass {
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(255,255,255,.45);
+      box-shadow: 0 10px 30px rgba(18,23,52,.12);
+      backdrop-filter: blur(16px);
+    }
+    .dark .glass {
+      background: rgba(14,17,30,.58);
+      border: 1px solid rgba(146,161,255,.22);
+      box-shadow: 0 12px 32px rgba(0,0,0,.35);
+    }
+    .neo {
+      box-shadow: 10px 10px 24px rgba(40,44,74,.08), -8px -8px 20px rgba(255,255,255,.8);
+    }
+    .dark .neo {
+      box-shadow: 10px 10px 24px rgba(0,0,0,.36), -6px -6px 16px rgba(33,39,68,.32);
+    }
+    .grad-text {
+      background: linear-gradient(120deg, var(--a1), var(--a2), var(--a3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .grad-btn {
+      background: linear-gradient(120deg, var(--a1), var(--a2), var(--a3));
+      background-size: 200% 200%;
+      animation: gradientShift 5s ease infinite;
+    }
+    .grid-bg {
+      background-image: linear-gradient(to right, rgba(124,133,196,.10) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(124,133,196,.10) 1px, transparent 1px);
+      background-size: 26px 26px;
+      mask-image: radial-gradient(circle at center, black 35%, transparent 78%);
+    }
+    .floating { animation: floatY 7s ease-in-out infinite; }
+    .floating:nth-child(2) { animation-delay: -1.5s; }
+    .floating:nth-child(3) { animation-delay: -3s; }
+    .floating:nth-child(4) { animation-delay: -4.5s; }
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px) scale(.985);
+      transition: all .7s cubic-bezier(.22,1,.36,1);
+    }
+    .reveal.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .ripple {
+      position: absolute;
+      border-radius: 999px;
+      transform: scale(0);
+      background: rgba(255,255,255,.45);
+      animation: ripple .6s ease-out;
+      pointer-events: none;
+    }
+    .feed-card {
+      transform-style: preserve-3d;
+      transition: transform .35s ease, box-shadow .35s ease;
+    }
+    .feed-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 46px rgba(90,63,242,.22);
+    }
+    .like-pop { animation: likePop .7s ease forwards; }
+    .skeleton {
+      background: linear-gradient(90deg, rgba(140,148,190,.15), rgba(180,188,240,.34), rgba(140,148,190,.15));
+      background-size: 220% 100%;
+      animation: shimmer 1.35s linear infinite;
+    }
+    .magnetic { transition: transform .18s ease; }
+    .message-in { animation: slideIn .45s cubic-bezier(.2,.8,.2,1) both; }
+    .parallax { transform: translateY(var(--parallax, 0)); }
+
+    @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes floatY { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+    @keyframes ripple { to { transform: scale(10); opacity: 0; } }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    @keyframes likePop {
+      0% { transform: translate(-50%, -50%) scale(.4); opacity: 0; }
+      20% { transform: translate(-50%, -55%) scale(1.1); opacity: 1; }
+      100% { transform: translate(-50%, -95%) scale(.75); opacity: 0; }
+    }
+    @keyframes slideIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="text-slate-900 dark:text-slate-100 transition-colors duration-300">
+  <div class="fixed inset-0 -z-10 grid-bg pointer-events-none"></div>
+
+  <header class="sticky top-4 z-50">
+    <div class="mx-auto w-[min(1240px,95%)] glass rounded-2xl px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg grad-btn"></div>
+        <div class="font-display text-lg font-bold grad-text">PyInsta</div>
+      </div>
+      <nav class="hidden lg:flex gap-2 text-sm">
+        <a class="px-3 py-2 rounded-xl hover:bg-white/60 dark:hover:bg-white/10 transition" href="#landing">Landing</a>
+        <a class="px-3 py-2 rounded-xl hover:bg-white/60 dark:hover:bg-white/10 transition" href="#auth">Auth</a>
+        <a class="px-3 py-2 rounded-xl hover:bg-white/60 dark:hover:bg-white/10 transition" href="#feed">Feed</a>
+        <a class="px-3 py-2 rounded-xl hover:bg-white/60 dark:hover:bg-white/10 transition" href="#create">Create</a>
+        <a class="px-3 py-2 rounded-xl hover:bg-white/60 dark:hover:bg-white/10 transition" href="#profile">Profile</a>
+        <a class="px-3 py-2 rounded-xl hover:bg-white/60 dark:hover:bg-white/10 transition" href="#messages">Messages</a>
+      </nav>
+      <button id="themeToggle" class="magnetic relative overflow-hidden grad-btn text-white text-sm font-semibold px-4 py-2 rounded-xl">Theme</button>
+    </div>
+  </header>
+
+  <main class="mx-auto w-[min(1240px,95%)] pb-20">
+    <section id="landing" class="min-h-screen pt-14 grid lg:grid-cols-2 gap-10 items-center">
+      <div class="reveal">
+        <span class="inline-flex glass rounded-full px-3 py-1 text-xs font-semibold">Next-generation creator platform</span>
+        <h1 class="font-display text-5xl lg:text-7xl mt-4 leading-[1.02] font-extrabold">
+          Build a creator
+          <span class="grad-text block">universe, not just a feed.</span>
+        </h1>
+        <p class="mt-5 text-slate-600 dark:text-slate-300 max-w-xl">
+          PyInsta is a premium social canvas blending storytelling, motion, and creator intelligence in one elegant product.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <button class="magnetic ripple-btn relative overflow-hidden grad-btn text-white font-semibold px-6 py-3 rounded-xl">Launch Experience</button>
+          <button class="magnetic ripple-btn relative overflow-hidden glass font-semibold px-6 py-3 rounded-xl">Watch Demo</button>
+        </div>
+        <div class="mt-10 grid grid-cols-3 gap-3 max-w-lg">
+          <div class="glass rounded-2xl p-4 neo"><div data-counter="14" class="stat text-2xl font-bold">0</div><p class="text-xs text-slate-500">Countries</p></div>
+          <div class="glass rounded-2xl p-4 neo"><div data-counter="3.2" class="stat text-2xl font-bold">0</div><p class="text-xs text-slate-500">M creators</p></div>
+          <div class="glass rounded-2xl p-4 neo"><div data-counter="97" class="stat text-2xl font-bold">0</div><p class="text-xs text-slate-500">NPS score</p></div>
+        </div>
+      </div>
+
+      <div class="relative h-[560px] reveal parallax" data-speed="0.18">
+        <div class="absolute inset-8 glass rounded-3xl p-4 border-white/60">
+          <div class="rounded-2xl h-44 grad-btn"></div>
+          <div class="mt-4 skeleton h-4 rounded"></div>
+          <div class="mt-2 skeleton h-4 w-4/5 rounded"></div>
+          <div class="mt-5 grid grid-cols-3 gap-3">
+            <div class="h-20 rounded-xl skeleton"></div>
+            <div class="h-20 rounded-xl skeleton"></div>
+            <div class="h-20 rounded-xl skeleton"></div>
+          </div>
+        </div>
+        <div class="floating absolute -left-6 top-6 w-40 h-52 glass rounded-2xl overflow-hidden">
+          <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800&auto=format&fit=crop" alt="">
+        </div>
+        <div class="floating absolute -right-6 top-20 w-44 h-56 glass rounded-2xl overflow-hidden">
+          <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop" alt="">
+        </div>
+        <div class="floating absolute right-8 bottom-0 w-36 h-44 glass rounded-2xl overflow-hidden">
+          <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=800&auto=format&fit=crop" alt="">
+        </div>
+      </div>
+    </section>
+
+    <section class="py-12 grid md:grid-cols-3 gap-5">
+      <article class="glass rounded-2xl p-6 reveal">
+        <h3 class="font-display text-xl font-bold">Story Intelligence</h3>
+        <p class="mt-2 text-slate-600 dark:text-slate-300">Auto-highlights and creator insights surfaced in real time.</p>
+      </article>
+      <article class="glass rounded-2xl p-6 reveal">
+        <h3 class="font-display text-xl font-bold">Motion-first UI</h3>
+        <p class="mt-2 text-slate-600 dark:text-slate-300">Every interaction is designed for tactile delight and speed.</p>
+      </article>
+      <article class="glass rounded-2xl p-6 reveal">
+        <h3 class="font-display text-xl font-bold">Creator Commerce</h3>
+        <p class="mt-2 text-slate-600 dark:text-slate-300">Premium storefront hooks integrated directly in content flows.</p>
+      </article>
+    </section>
+
+    <section id="auth" class="min-h-screen py-12 grid lg:grid-cols-2 gap-8 items-center">
+      <div class="reveal">
+        <h2 class="font-display text-4xl font-bold">Authentication that feels premium</h2>
+        <p class="mt-3 text-slate-600 dark:text-slate-300">Glass cards, floating labels, motion feedback, and instant validation.</p>
+      </div>
+      <div class="glass rounded-3xl p-6 reveal">
+        <div class="space-y-4">
+          <div class="relative">
+            <input id="email" placeholder=" " class="peer w-full h-12 px-4 pt-4 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-300/60 dark:border-slate-700" />
+            <label for="email" class="absolute left-4 top-3 text-sm text-slate-500 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-xs">Email</label>
+          </div>
+          <div class="relative">
+            <input id="pass" type="password" placeholder=" " class="peer w-full h-12 px-4 pt-4 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-300/60 dark:border-slate-700" />
+            <label for="pass" class="absolute left-4 top-3 text-sm text-slate-500 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-xs">Password</label>
+            <button id="togglePass" class="absolute right-3 top-3 text-xs glass px-2 py-1 rounded">Show</button>
+          </div>
+          <button class="ripple-btn relative overflow-hidden w-full h-12 rounded-xl text-white font-semibold grad-btn">Continue</button>
+          <div class="grid grid-cols-2 gap-3">
+            <button class="glass rounded-xl h-11 text-sm font-medium">Google</button>
+            <button class="glass rounded-xl h-11 text-sm font-medium">Apple</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="feed" class="min-h-screen py-10">
+      <div class="reveal flex items-end justify-between gap-4 mb-5">
+        <div>
+          <h2 class="font-display text-4xl font-bold">Dynamic social feed</h2>
+          <p class="text-slate-600 dark:text-slate-300 mt-2">Immersive cards with animated controls and reveal motion.</p>
+        </div>
+      </div>
+      <div class="grid lg:grid-cols-3 gap-5">
+        <article class="feed-card glass rounded-2xl overflow-hidden reveal relative">
+          <img class="h-64 w-full object-cover" src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1200&auto=format&fit=crop" alt="">
+          <div class="p-4">
+            <div class="flex items-center gap-3">
+              <img class="w-10 h-10 rounded-full" src="https://i.pravatar.cc/120?img=32" alt="">
+              <div><p class="font-semibold">@reya</p><p class="text-xs text-slate-500">2m ago</p></div>
+            </div>
+            <p class="mt-3 text-sm">Night mountain, neon sky, and cinematic calm.</p>
+            <div class="mt-4 flex gap-2">
+              <button class="like-btn ripple-btn relative overflow-hidden rounded-xl px-3 py-2 text-sm glass">Like</button>
+              <button class="rounded-xl px-3 py-2 text-sm glass">Comment</button>
+              <button class="rounded-xl px-3 py-2 text-sm glass">Share</button>
+            </div>
+          </div>
+        </article>
+        <article class="feed-card glass rounded-2xl overflow-hidden reveal">
+          <img class="h-64 w-full object-cover" src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200&auto=format&fit=crop" alt="">
+          <div class="p-4">
+            <div class="flex items-center gap-3">
+              <img class="w-10 h-10 rounded-full" src="https://i.pravatar.cc/120?img=12" alt="">
+              <div><p class="font-semibold">@dior</p><p class="text-xs text-slate-500">8m ago</p></div>
+            </div>
+            <p class="mt-3 text-sm">Work mode. Build mode. Creator mode.</p>
+            <div class="mt-4 flex gap-2">
+              <button class="like-btn ripple-btn relative overflow-hidden rounded-xl px-3 py-2 text-sm glass">Like</button>
+              <button class="rounded-xl px-3 py-2 text-sm glass">Comment</button>
+              <button class="rounded-xl px-3 py-2 text-sm glass">Share</button>
+            </div>
+          </div>
+        </article>
+        <article class="feed-card glass rounded-2xl overflow-hidden reveal">
+          <img class="h-64 w-full object-cover" src="https://images.unsplash.com/photo-1489515217757-5fd1be406fef?q=80&w=1200&auto=format&fit=crop" alt="">
+          <div class="p-4">
+            <div class="flex items-center gap-3">
+              <img class="w-10 h-10 rounded-full" src="https://i.pravatar.cc/120?img=47" alt="">
+              <div><p class="font-semibold">@nova</p><p class="text-xs text-slate-500">15m ago</p></div>
+            </div>
+            <p class="mt-3 text-sm">Analog tones + digital mood in one frame.</p>
+            <div class="mt-4 flex gap-2">
+              <button class="like-btn ripple-btn relative overflow-hidden rounded-xl px-3 py-2 text-sm glass">Like</button>
+              <button class="rounded-xl px-3 py-2 text-sm glass">Comment</button>
+              <button class="rounded-xl px-3 py-2 text-sm glass">Share</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="create" class="min-h-screen py-14 grid lg:grid-cols-2 gap-7 items-start">
+      <div class="reveal">
+        <h2 class="font-display text-4xl font-bold">Create Post Experience</h2>
+        <p class="text-slate-600 dark:text-slate-300 mt-3">Drag-drop upload, live preview, emoji + hashtag assistant, and progress feedback.</p>
+      </div>
+      <div class="glass rounded-3xl p-6 reveal space-y-4">
+        <label id="dropzone" class="block border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-10 text-center cursor-pointer hover:border-indigo-400 transition">
+          <p class="font-semibold">Drop media here or click to upload</p>
+          <input type="file" class="hidden" />
+        </label>
+        <div class="h-2 rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden">
+          <div id="progressBar" class="h-full w-0 grad-btn transition-all duration-300"></div>
+        </div>
+        <textarea class="w-full h-28 rounded-2xl p-4 bg-white/70 dark:bg-slate-900/60 border border-slate-300/70 dark:border-slate-700" placeholder="Write caption... #sunset #vibes"></textarea>
+        <div class="flex flex-wrap gap-2 text-xs">
+          <span class="glass rounded-full px-3 py-1">#cinematic</span>
+          <span class="glass rounded-full px-3 py-1">#creatorlife</span>
+          <span class="glass rounded-full px-3 py-1">#visualstory</span>
+          <button class="glass rounded-full px-3 py-1">Emoji</button>
+          <button class="glass rounded-full px-3 py-1">Location</button>
+        </div>
+        <button class="w-full h-12 rounded-xl text-white font-semibold grad-btn ripple-btn relative overflow-hidden">Publish Post</button>
+      </div>
+    </section>
+
+    <section id="profile" class="min-h-screen py-14">
+      <div class="glass rounded-3xl p-6 reveal">
+        <div class="flex flex-col md:flex-row md:items-center gap-5">
+          <img class="w-24 h-24 rounded-2xl object-cover ring-2 ring-indigo-400/50 hover:scale-105 transition" src="https://i.pravatar.cc/200?img=44" alt="">
+          <div class="flex-1">
+            <div class="flex items-center flex-wrap gap-3">
+              <h2 class="font-display text-3xl font-bold">@mohit_navare</h2>
+              <button class="glass rounded-xl px-4 py-2 text-sm">Edit Profile</button>
+            </div>
+            <p class="mt-2 text-slate-600 dark:text-slate-300">Visual storyteller. Flask builder. Product dreamer.</p>
+            <div class="mt-4 grid grid-cols-3 gap-3 max-w-md">
+              <div class="glass rounded-xl p-3"><p class="text-xl font-bold" data-counter="294">0</p><p class="text-xs text-slate-500">Posts</p></div>
+              <div class="glass rounded-xl p-3"><p class="text-xl font-bold" data-counter="125">0</p><p class="text-xs text-slate-500">Followers</p></div>
+              <div class="glass rounded-xl p-3"><p class="text-xl font-bold" data-counter="610">0</p><p class="text-xs text-slate-500">Following</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 flex gap-2 text-sm">
+          <button class="glass rounded-xl px-4 py-2">Posts</button>
+          <button class="glass rounded-xl px-4 py-2">Reels</button>
+          <button class="glass rounded-xl px-4 py-2">Tagged</button>
+        </div>
+        <div class="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <img class="rounded-xl h-40 w-full object-cover hover:scale-[1.02] transition" src="https://images.unsplash.com/photo-1516534775068-ba3e7458af70?q=80&w=900&auto=format&fit=crop" alt="">
+          <img class="rounded-xl h-40 w-full object-cover hover:scale-[1.02] transition" src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=900&auto=format&fit=crop" alt="">
+          <img class="rounded-xl h-40 w-full object-cover hover:scale-[1.02] transition" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=900&auto=format&fit=crop" alt="">
+          <img class="rounded-xl h-40 w-full object-cover hover:scale-[1.02] transition" src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=900&auto=format&fit=crop" alt="">
+        </div>
+      </div>
+    </section>
+
+    <section id="messages" class="min-h-screen py-14 grid lg:grid-cols-[340px_1fr] gap-6">
+      <aside class="glass rounded-3xl p-4 reveal">
+        <h3 class="font-display text-2xl font-bold mb-4">Messages</h3>
+        <div class="space-y-2">
+          <button class="w-full text-left glass rounded-xl p-3">Aarav <span class="float-right text-xs text-slate-500">Now</span></button>
+          <button class="w-full text-left glass rounded-xl p-3">Ritika <span class="float-right text-xs text-slate-500">2m</span></button>
+          <button class="w-full text-left glass rounded-xl p-3">Tejas <span class="float-right text-xs text-slate-500">18m</span></button>
+        </div>
+      </aside>
+      <div class="glass rounded-3xl p-4 reveal flex flex-col min-h-[560px]">
+        <div class="pb-3 border-b border-slate-200/50 dark:border-slate-700/50 font-semibold">Aarav</div>
+        <div class="flex-1 py-4 space-y-3">
+          <div class="message-in max-w-xs glass rounded-2xl px-4 py-2">Can we collaborate this week?</div>
+          <div class="message-in max-w-xs rounded-2xl px-4 py-2 ml-auto grad-btn text-white">Yes. Let's ship it.</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500">
+            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+            typing...
+          </div>
+        </div>
+        <div class="pt-3 border-t border-slate-200/50 dark:border-slate-700/50 flex gap-2">
+          <button class="glass rounded-xl px-3">+</button>
+          <input class="flex-1 rounded-xl px-4 bg-white/70 dark:bg-slate-900/60 border border-slate-300/70 dark:border-slate-700" placeholder="Type a message..." />
+          <button class="grad-btn text-white rounded-xl px-4">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="notifications" class="py-12">
+      <h2 class="font-display text-4xl font-bold reveal">Notification Timeline</h2>
+      <div class="mt-5 space-y-3 max-w-3xl">
+        <article class="glass rounded-2xl p-4 reveal flex items-center gap-3"><span class="text-xl">❤</span><p><strong>@reya</strong> liked your new post.</p></article>
+        <article class="glass rounded-2xl p-4 reveal flex items-center gap-3"><span class="text-xl">◎</span><p><strong>@dior</strong> commented "This is unreal."</p></article>
+        <article class="glass rounded-2xl p-4 reveal flex items-center gap-3"><span class="text-xl">+</span><p><strong>@nova</strong> started following you.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const root = document.documentElement;
+    const themeToggle = document.getElementById("themeToggle");
+    themeToggle.addEventListener("click", () => {
+      root.classList.toggle("dark");
+    });
+
+    document.querySelectorAll(".ripple-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const rect = btn.getBoundingClientRect();
+        const span = document.createElement("span");
+        span.className = "ripple";
+        span.style.left = `${e.clientX - rect.left}px`;
+        span.style.top = `${e.clientY - rect.top}px`;
+        btn.appendChild(span);
+        setTimeout(() => span.remove(), 620);
+      });
+    });
+
+    document.querySelectorAll(".like-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const icon = document.createElement("span");
+        icon.textContent = "❤";
+        icon.className = "absolute like-pop text-rose-500 text-3xl pointer-events-none";
+        icon.style.left = `${e.offsetX}px`;
+        icon.style.top = `${e.offsetY}px`;
+        btn.style.position = "relative";
+        btn.appendChild(icon);
+        setTimeout(() => icon.remove(), 700);
+      });
+    });
+
+    document.querySelectorAll(".magnetic").forEach((el) => {
+      el.addEventListener("mousemove", (e) => {
+        const r = el.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width - 0.5) * 10;
+        const y = ((e.clientY - r.top) / r.height - 0.5) * 10;
+        el.style.transform = `translate(${x}px, ${y}px)`;
+      });
+      el.addEventListener("mouseleave", () => {
+        el.style.transform = "translate(0,0)";
+      });
+    });
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("show");
+      });
+    }, { threshold: 0.16 });
+    document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const end = Number(el.dataset.counter || "0");
+        let cur = 0;
+        const step = end / 42;
+        const timer = setInterval(() => {
+          cur += step;
+          if (cur >= end) {
+            el.textContent = Number.isInteger(end) ? String(end) : `${end.toFixed(1)}`;
+            clearInterval(timer);
+          } else {
+            el.textContent = Number.isInteger(end) ? String(Math.floor(cur)) : `${cur.toFixed(1)}`;
+          }
+        }, 24);
+        counterObserver.unobserve(el);
+      });
+    }, { threshold: 0.55 });
+    document.querySelectorAll("[data-counter]").forEach((el) => counterObserver.observe(el));
+
+    const dropzone = document.getElementById("dropzone");
+    const progressBar = document.getElementById("progressBar");
+    if (dropzone && progressBar) {
+      dropzone.addEventListener("click", () => {
+        let p = 0;
+        const timer = setInterval(() => {
+          p += 6;
+          progressBar.style.width = `${Math.min(p, 100)}%`;
+          if (p >= 100) clearInterval(timer);
+        }, 80);
+      });
+    }
+
+    const togglePass = document.getElementById("togglePass");
+    const pass = document.getElementById("pass");
+    if (togglePass && pass) {
+      togglePass.addEventListener("click", (e) => {
+        e.preventDefault();
+        pass.type = pass.type === "password" ? "text" : "password";
+        togglePass.textContent = pass.type === "password" ? "Show" : "Hide";
+      });
+    }
+
+    window.addEventListener("scroll", () => {
+      const y = window.scrollY;
+      document.querySelectorAll(".parallax").forEach((el) => {
+        const speed = Number(el.dataset.speed || "0.12");
+        el.style.setProperty("--parallax", `${y * speed}px`);
+      });
+    });
+  </script>
+</body>
+</html>
