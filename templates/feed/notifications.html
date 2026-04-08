@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Notifications - PyInsta{% endblock %}
+
+{% block content %}
+<div class="create-card">
+    <div class="profile-row">
+        <div class="page-title-row">
+            <h2>Notifications</h2>
+            <p>Likes, comments, and follows in one stream.</p>
+        </div>
+        <form method="POST" action="{{ url_for('mark_notifications_read') }}" class="inline-form">
+            <button type="submit" class="btn">Mark all read</button>
+        </form>
+    </div>
+</div>
+
+<div class="feed">
+    {% for item in notifications %}
+    <article class="post {% if not item.is_read %}notif-unread{% endif %}">
+        <div class="post-header">
+            <div class="post-owner">
+                <img src="{{ item.actor_profile_image_url }}" alt="{{ item.actor }} avatar" loading="lazy" decoding="async">
+                <a href="{{ url_for('view_profile', username=item.actor) }}">@{{ item.actor }}</a>
+            </div>
+            <small>{{ item.created_at.strftime('%d %b %Y, %H:%M') if item.created_at else '' }}</small>
+        </div>
+        <div class="post-caption">{{ item.text }}</div>
+    </article>
+    {% else %}
+    <article class="post">
+        <div class="post-caption"><strong>No notifications yet.</strong></div>
+    </article>
+    {% endfor %}
+</div>
+{% endblock %}
