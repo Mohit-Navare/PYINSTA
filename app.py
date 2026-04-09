@@ -47,6 +47,8 @@ app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50MB per request
 FEED_PAGE_SIZE = 20
 FEED_MAINTENANCE_INTERVAL_SECONDS = int(os.getenv("FEED_MAINTENANCE_INTERVAL_SECONDS", "3600"))
 MEDIA_CACHE_MAX_AGE_SECONDS = 86400
+NOTIFICATION_POLL_INTERVAL_MS = int(os.getenv("NOTIFICATION_POLL_INTERVAL_MS", "15000"))
+NOTIFICATION_POPUP_FETCH_LIMIT = int(os.getenv("NOTIFICATION_POPUP_FETCH_LIMIT", "8"))
 _last_feed_maintenance_run_at: datetime | None = None
 
 logging.basicConfig(level=logging.INFO)
@@ -252,7 +254,10 @@ def inject_global_template_data():
         notifications_data = (user_doc or {}).get("notifications", [])
         unread_notifications = sum(1 for item in notifications_data if not item.get("is_read"))
 
-    return {"unread_notifications": unread_notifications}
+    return {
+        "unread_notifications": unread_notifications,
+        "notification_poll_interval_ms": NOTIFICATION_POLL_INTERVAL_MS,
+    }
 
 
 def is_ajax_request() -> bool:
@@ -1034,6 +1039,82 @@ def add_notification(
         {"username": target_username},
         {"$push": {"notifications": {"$each": [notification], "$position": 0, "$slice": 100}}},
     )
+
+
+def get_notification_public_id(notification_item: dict) -> str:
+    """Return a stable public id for notification payloads."""
+    raw_id = str(notification_item.get("id") or "").strip()
+    if raw_id:
+        return raw_id
+
+    created_at = notification_item.get("created_at")
+    created_at_iso = created_at.isoformat() if isinstance(created_at, datetime) else ""
+    actor = str(notification_item.get("actor") or "").strip()
+    notification_type = str(notification_item.get("type") or "").strip()
+    post_id = str(notification_item.get("post_id") or "").strip()
+    return f"{actor}:{notification_type}:{post_id}:{created_at_iso}"
+
+
+def build_notification_target_url(notification_item: dict) -> str:
+    """Choose the most useful destination for a notification click."""
+    actor_username = str(notification_item.get("actor") or "").strip()
+    if notification_item.get("type") == "follow" and actor_username:
+        return url_for("view_profile", username=actor_username)
+    return url_for("notifications")
+
+
+def enrich_notifications_for_view(notifications_data: list[dict] | None) -> list[dict]:
+    """Attach actor images, labels, and links for notification views and APIs."""
+    normalized_items = [item for item in (notifications_data or []) if isinstance(item, dict)]
+    if not normalized_items:
+        return []
+
+    actor_usernames = {
+        item.get("actor")
+        for item in normalized_items
+        if isinstance(item.get("actor"), str) and item.get("actor").strip()
+    }
+    actor_map = {}
+    if actor_usernames:
+        actor_docs = list(
+            users.find(
+                {"username": {"$in": list(actor_usernames)}},
+                {"username": 1, "profile_image": 1, "gender": 1},
+            )
+        )
+        actor_map = {doc["username"]: doc for doc in actor_docs if doc.get("username")}
+
+    enriched_items: list[dict] = []
+    for item in normalized_items:
+        created_at = item.get("created_at")
+        actor_doc = actor_map.get(item.get("actor"))
+        enriched_item = dict(item)
+        enriched_item["id"] = get_notification_public_id(item)
+        enriched_item["actor_profile_image_url"] = get_user_profile_image(actor_doc)
+        enriched_item["created_at_label"] = (
+            created_at.strftime("%d %b %Y, %H:%M") if isinstance(created_at, datetime) else ""
+        )
+        enriched_item["created_at_iso"] = created_at.isoformat() if isinstance(created_at, datetime) else ""
+        enriched_item["link_url"] = build_notification_target_url(enriched_item)
+        enriched_items.append(enriched_item)
+
+    return enriched_items
+
+
+def serialize_notification_item(notification_item: dict) -> dict:
+    """Return a JSON-safe notification payload for live popups."""
+    return {
+        "id": notification_item.get("id", ""),
+        "type": notification_item.get("type", ""),
+        "actor": notification_item.get("actor", ""),
+        "text": notification_item.get("text", ""),
+        "post_id": notification_item.get("post_id"),
+        "is_read": bool(notification_item.get("is_read")),
+        "created_at_label": notification_item.get("created_at_label", ""),
+        "created_at_iso": notification_item.get("created_at_iso", ""),
+        "actor_profile_image_url": notification_item.get("actor_profile_image_url", ""),
+        "link_url": notification_item.get("link_url", url_for("notifications")),
+    }
 
 
 @app.route("/media/profile/<username>")
@@ -2026,26 +2107,46 @@ def notifications():
         current_user_doc = require_current_session_user_doc()
         if not current_user_doc:
             return redirect(url_for("login"))
-        notifications_data = current_user_doc.get("notifications", [])
-
-        actor_usernames = {item.get("actor") for item in notifications_data if item.get("actor")}
-        actor_docs = list(
-            users.find(
-                {"username": {"$in": list(actor_usernames)}},
-                {"username": 1, "profile_image": 1, "gender": 1},
-            )
-        )
-        actor_map = {doc["username"]: doc for doc in actor_docs}
-
-        for item in notifications_data:
-            actor_doc = actor_map.get(item.get("actor"))
-            item["actor_profile_image_url"] = get_user_profile_image(actor_doc)
+        notifications_data = enrich_notifications_for_view(current_user_doc.get("notifications", []))
 
         return render_template("feed/notifications.html", notifications=notifications_data)
     except Exception as exc:
         logger.error("Notifications error: %s", exc)
         flash("Unable to load notifications.", "error")
         return redirect(url_for("home"))
+
+
+@app.route("/notifications/live")
+def notifications_live():
+    """Serve recent notifications for client-side live popup polling."""
+    ensure_db()
+
+    username = session.get("username")
+    if not username:
+        return jsonify({"success": False, "error": "Authentication required."}), 401
+
+    current_user_doc = get_current_session_user_doc()
+    if not current_user_doc:
+        session.clear()
+        return jsonify({"success": False, "error": "Session expired."}), 401
+
+    try:
+        notifications_data = current_user_doc.get("notifications", [])
+        unread_count = sum(1 for item in notifications_data if not item.get("is_read"))
+        recent_notifications = enrich_notifications_for_view(
+            notifications_data[: max(NOTIFICATION_POPUP_FETCH_LIMIT, 1)]
+        )
+        return jsonify(
+            {
+                "success": True,
+                "unread_count": unread_count,
+                "poll_interval_ms": NOTIFICATION_POLL_INTERVAL_MS,
+                "notifications": [serialize_notification_item(item) for item in recent_notifications],
+            }
+        )
+    except Exception as exc:
+        logger.error("Live notifications error: %s", exc)
+        return jsonify({"success": False, "error": "Unable to load notifications."}), 500
 
 
 @app.route("/notifications/read_all", methods=["POST"])
