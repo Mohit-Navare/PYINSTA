@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}" data-endpoint="{{ request.endpoint or '' }}">
 <div class="bg-orb bg-orb-a"></div>
 <div class="bg-orb bg-orb-b"></div>
 <div class="bg-grid"></div>
@@ -30,7 +30,12 @@
         {% if session.username %}
             <a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}is-active{% endif %}">Feed</a>
             <a href="{{ url_for('create_snap') }}" class="{% if request.endpoint in ['create_snap', 'upload'] %}is-active{% endif %}">Create</a>
-            <a href="{{ url_for('notifications') }}" class="{% if request.endpoint in ['notifications', 'mark_notifications_read'] %}is-active{% endif %}">Alerts{% if unread_notifications %} ({{ unread_notifications }}){% endif %}</a>
+            <a href="{{ url_for('notifications') }}" class="{% if request.endpoint in ['notifications', 'mark_notifications_read'] %}is-active{% endif %} has-count">
+                <span>Alerts</span>
+                <span class="nav-count-badge {% if not unread_notifications %}is-hidden{% endif %}" data-notification-count>
+                    {{ unread_notifications }}
+                </span>
+            </a>
             <a href="{{ url_for('saved_posts') }}" class="{% if request.endpoint == 'saved_posts' %}is-active{% endif %}">Saved</a>
             <a href="{{ url_for('settings') }}" class="{% if request.endpoint == 'settings' %}is-active{% endif %}">Settings</a>
             <a href="{{ url_for('profile') }}" class="{% if request.endpoint in ['profile', 'view_profile', 'profile_connections', 'change_profile_pic'] %}is-active{% endif %}">Profile</a>
@@ -64,6 +69,18 @@
         </div>
     {% endif %}
 {% endwith %}
+
+{% if session.username %}
+<div
+    id="notification-popups"
+    class="notification-popup-host"
+    data-live-url="{{ url_for('notifications_live') }}"
+    data-alerts-url="{{ url_for('notifications') }}"
+    data-poll-interval-ms="{{ notification_poll_interval_ms }}"
+    data-current-endpoint="{{ request.endpoint or '' }}"
+    aria-live="polite">
+</div>
+{% endif %}
 
 <!-- Main Page Content -->
 <main class="page-main">
