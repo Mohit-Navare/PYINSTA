@@ -1,3 +1,4 @@
+
 import os
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from pymongo.errors import PyMongoError
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / "cloud.env", override=True)
 
 MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = os.getenv("DB_NAME", "pyinsta_social")
@@ -28,3 +30,7 @@ else:
         print("MongoDB connected successfully")
     except PyMongoError as e:
         print(f"Failed to connect to MongoDB: {e}")
+        client = None
+        db = None
+        users_collection = None
+        posts_collection = None
