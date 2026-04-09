@@ -204,3 +204,173 @@ document.addEventListener("DOMContentLoaded", function () {
     if (closeBtn) closeBtn.addEventListener("click", closeModal);
 })();
 
+(function () {
+    const popupHost = document.getElementById("notification-popups");
+    const countBadge = document.querySelector("[data-notification-count]");
+
+    if (!popupHost) {
+        return;
+    }
+
+    const liveUrl = popupHost.dataset.liveUrl;
+    const alertsUrl = popupHost.dataset.alertsUrl || "/notifications";
+    const currentEndpoint = popupHost.dataset.currentEndpoint || "";
+    const parsedInterval = Number.parseInt(popupHost.dataset.pollIntervalMs || "15000", 10);
+    const pollIntervalMs = Number.isFinite(parsedInterval) ? Math.max(parsedInterval, 5000) : 15000;
+
+    const seenNotificationIds = new Set();
+    let hasBootstrapped = false;
+    let pollTimer = null;
+    let isPolling = false;
+    let isPollingEnabled = true;
+
+    function updateBadge(unreadCount) {
+        if (!countBadge) return;
+        const safeCount = Math.max(Number.parseInt(unreadCount, 10) || 0, 0);
+        countBadge.textContent = safeCount > 99 ? "99+" : String(safeCount);
+        countBadge.classList.toggle("is-hidden", safeCount === 0);
+    }
+
+    function dismissPopup(popupEl) {
+        if (!popupEl || popupEl.classList.contains("is-dismissing")) return;
+        popupEl.classList.add("is-dismissing");
+        window.setTimeout(() => popupEl.remove(), 240);
+    }
+
+    function attachPopupLifetime(popupEl) {
+        let dismissTimer = window.setTimeout(() => dismissPopup(popupEl), 8000);
+
+        popupEl.addEventListener("mouseenter", () => {
+            window.clearTimeout(dismissTimer);
+        });
+
+        popupEl.addEventListener("mouseleave", () => {
+            dismissTimer = window.setTimeout(() => dismissPopup(popupEl), 5000);
+        });
+
+        const closeBtn = popupEl.querySelector(".notification-popup-close");
+        if (closeBtn) {
+            closeBtn.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                window.clearTimeout(dismissTimer);
+                dismissPopup(popupEl);
+            });
+        }
+    }
+
+    function renderPopup(notificationItem) {
+        if (!notificationItem || !notificationItem.id) {
+            return;
+        }
+
+        const popupEl = document.createElement("article");
+        popupEl.className = "notification-popup";
+        popupEl.dataset.notificationId = notificationItem.id;
+        popupEl.innerHTML = `
+            <button type="button" class="notification-popup-close" aria-label="Dismiss notification">&times;</button>
+            <div class="notification-popup-row">
+                <img
+                    class="notification-popup-avatar"
+                    src="${notificationItem.actor_profile_image_url || ""}"
+                    alt="${notificationItem.actor || "User"} avatar">
+                <div class="notification-popup-content">
+                    <p class="notification-popup-label">New alert</p>
+                    <p class="notification-popup-text">${notificationItem.text || "You have a new notification."}</p>
+                    <div class="notification-popup-meta">
+                        <span>${notificationItem.created_at_label || "Just now"}</span>
+                        <a href="${notificationItem.link_url || alertsUrl}" class="notification-popup-link">Open</a>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        popupHost.prepend(popupEl);
+        window.requestAnimationFrame(() => popupEl.classList.add("is-visible"));
+        attachPopupLifetime(popupEl);
+
+        const activePopups = Array.from(popupHost.querySelectorAll(".notification-popup"));
+        activePopups.slice(4).forEach((item) => dismissPopup(item));
+    }
+
+    async function fetchLiveNotifications() {
+        if (!liveUrl || isPolling || !isPollingEnabled) {
+            return;
+        }
+
+        isPolling = true;
+        try {
+            const response = await fetch(liveUrl, {
+                method: "GET",
+                headers: {
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                credentials: "same-origin",
+                cache: "no-store",
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    isPollingEnabled = false;
+                    if (pollTimer) {
+                        window.clearTimeout(pollTimer);
+                        pollTimer = null;
+                    }
+                }
+                return;
+            }
+
+            const payload = await response.json();
+            const notifications = Array.isArray(payload.notifications) ? payload.notifications : [];
+            updateBadge(payload.unread_count);
+
+            if (!hasBootstrapped) {
+                notifications.forEach((item) => {
+                    if (item && item.id) {
+                        seenNotificationIds.add(item.id);
+                    }
+                });
+                hasBootstrapped = true;
+                return;
+            }
+
+            const freshItems = notifications.filter((item) => item && item.id && !seenNotificationIds.has(item.id));
+            freshItems.forEach((item) => seenNotificationIds.add(item.id));
+
+            if (currentEndpoint !== "notifications") {
+                freshItems
+                    .slice()
+                    .reverse()
+                    .forEach((item, index) => {
+                        window.setTimeout(() => renderPopup(item), index * 220);
+                    });
+            }
+        } catch (_error) {
+            // Ignore transient polling failures and try again on the next cycle.
+        } finally {
+            isPolling = false;
+        }
+    }
+
+    async function tickPoller() {
+        if (!isPollingEnabled) {
+            return;
+        }
+        if (!document.hidden) {
+            await fetchLiveNotifications();
+        }
+        if (isPollingEnabled) {
+            pollTimer = window.setTimeout(tickPoller, pollIntervalMs);
+        }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && isPollingEnabled) {
+            fetchLiveNotifications();
+        }
+    });
+
+    tickPoller();
+})();
+
