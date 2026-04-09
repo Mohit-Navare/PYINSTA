@@ -1606,13 +1606,17 @@ def follow(username):
     """Follow or unfollow another user."""
     ensure_db()
 
-    current_username = session["username"]
+    current_user_doc = require_current_session_user_doc()
+    if not current_user_doc:
+        return redirect(url_for("login"))
+
+    current_username = current_user_doc["username"]
     if current_username == username:
         flash("You cannot follow yourself.", "warning")
         return redirect(url_for("view_profile", username=username))
 
     try:
-        current_user = users.find_one({"username": current_username})
+        current_user = current_user_doc
         target_user = users.find_one({"username": username})
 
         if not current_user or not target_user:
@@ -1644,15 +1648,14 @@ def change_profile_pic():
     """Update profile picture and bio."""
     ensure_db()
 
-    username = session["username"]
+    current_user_doc = require_current_session_user_doc()
+    if not current_user_doc:
+        return redirect(url_for("login"))
+
+    username = current_user_doc["username"]
 
     try:
-        user_doc = ensure_user_defaults(users.find_one({"username": username}))
-        if not user_doc:
-            flash("User not found.", "error")
-            return redirect(url_for("home"))
-
-        errors = apply_profile_updates(user_doc, include_account_fields=False)
+        errors = apply_profile_updates(current_user_doc, include_account_fields=False)
         if errors:
             for err in errors:
                 flash(err, "error" if err != "No changes were submitted." else "warning")
@@ -1771,6 +1774,11 @@ def comment_post(post_id):
         if is_ajax_request():
             return jsonify({"success": False, "error": "Comment cannot be empty."}), 400
         flash("Comment cannot be empty.", "error")
+        return redirect(request.referrer or url_for("home"))
+    if len(comment_text) > 500:
+        if is_ajax_request():
+            return jsonify({"success": False, "error": "Comment must be 500 characters or less."}), 400
+        flash("Comment must be 500 characters or less.", "error")
         return redirect(request.referrer or url_for("home"))
 
     try:
@@ -2047,7 +2055,9 @@ def mark_notifications_read():
     ensure_db()
 
     try:
-        user_doc = ensure_user_defaults(users.find_one({"username": session["username"]}))
+        user_doc = require_current_session_user_doc()
+        if not user_doc:
+            return redirect(url_for("login"))
         notifications_data = user_doc.get("notifications", [])
         for item in notifications_data:
             item["is_read"] = True
@@ -2119,6 +2129,10 @@ def settings():
         return redirect(url_for("settings"))
 
     latest_user_doc = ensure_user_defaults(users.find_one({"username": current_username}))
+    if not latest_user_doc:
+        session.clear()
+        flash("Your account was not found. Please log in again.", "warning")
+        return redirect(url_for("login"))
     latest_posts = list(posts.find({"username": current_username}).sort("created_at", -1))
     insights = build_profile_insights(latest_user_doc, latest_posts)
     return render_template("settings.html", user=latest_user_doc, insights=insights)
