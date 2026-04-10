@@ -1414,9 +1414,10 @@ def register():
                 profile_image,
             )
             users.insert_one(user_doc)
+            session["username"] = username
             logger.info("Registered user: %s", username)
-            flash("Account created successfully. Please log in.", "success")
-            return redirect(url_for("login"))
+            flash("Account created successfully. You are now logged in.", "success")
+            return redirect(url_for("home"))
         except Exception as exc:
             logger.error("Registration error: %s", exc)
             flash("An error occurred during registration.", "error")
