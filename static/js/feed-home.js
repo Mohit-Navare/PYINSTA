@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const posts = [...document.querySelectorAll(".likeable-post")];
     const videos = [...document.querySelectorAll(".post-video")];
+    const musicCards = [...document.querySelectorAll(".post-music-card")];
+    const musicAudios = [...document.querySelectorAll(".post-music-audio")];
     const header = document.querySelector(".header");
 
     function setupPostSnapScroll() {
@@ -291,6 +293,79 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     setupPostSnapScroll();
+
+    function setMusicToggleState(audio, isMuted) {
+        const card = audio.closest(".post-music-card");
+        const button = card?.querySelector(".post-music-toggle");
+        if (!button) return;
+        button.dataset.state = isMuted ? "muted" : "unmuted";
+        button.setAttribute("aria-pressed", String(!isMuted));
+        button.textContent = isMuted ? "Unmute" : "Mute";
+    }
+
+    function pauseOtherMusic(activeAudio) {
+        musicAudios.forEach((audio) => {
+            if (audio !== activeAudio) {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.muted = true;
+                setMusicToggleState(audio, true);
+            }
+        });
+    }
+
+    if (musicAudios.length) {
+        const musicObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(({ target, isIntersecting, intersectionRatio }) => {
+                    if (!(target instanceof HTMLElement)) return;
+                    const audio = target.querySelector(".post-music-audio");
+                    if (!(audio instanceof HTMLAudioElement)) return;
+
+                    if (isIntersecting && intersectionRatio >= 0.72) {
+                        pauseOtherMusic(audio);
+                        audio.muted = true;
+                        setMusicToggleState(audio, true);
+                        audio.play().catch(() => {});
+                        return;
+                    }
+
+                    if (!isIntersecting || intersectionRatio < 0.4) {
+                        audio.pause();
+                    }
+                });
+            },
+            { threshold: [0, 0.4, 0.72, 1] }
+        );
+
+        musicCards.forEach((card) => {
+            musicObserver.observe(card);
+        });
+
+        musicAudios.forEach((audio) => {
+            setMusicToggleState(audio, true);
+
+            audio.addEventListener("play", () => {
+                pauseOtherMusic(audio);
+            });
+
+            const card = audio.closest(".post-music-card");
+            const toggleBtn = card?.querySelector(".post-music-toggle");
+            toggleBtn?.addEventListener("click", () => {
+                if (audio.paused) {
+                    pauseOtherMusic(audio);
+                    audio.play().catch(() => {});
+                }
+
+                const shouldUnmute = audio.muted;
+                if (shouldUnmute) {
+                    pauseOtherMusic(audio);
+                }
+                audio.muted = !shouldUnmute ? true : false;
+                setMusicToggleState(audio, audio.muted);
+            });
+        });
+    }
 
     if (videos.length) {
         const pauseOffscreen = new IntersectionObserver(
