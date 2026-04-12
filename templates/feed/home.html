@@ -90,9 +90,15 @@
                         <strong>{{ post.music.title }}</strong>
                         <span>{{ post.music.artist }}</span>
                     </div>
+                    {% if post.music.preview %}
+                    <button type="button" class="post-music-toggle" data-state="muted" aria-pressed="false">Unmute</button>
+                    {% endif %}
                 </div>
                 {% if post.music.preview %}
-                <audio controls src="{{ post.music.preview }}"></audio>
+                <audio class="post-music-audio" src="{{ post.music.preview }}" preload="none" loop playsinline muted></audio>
+                <small class="music-muted">Auto-plays muted on scroll. Tap Unmute to hear.</small>
+                {% else %}
+                <small class="music-muted">Preview unavailable for this track.</small>
                 {% endif %}
             </div>
             {% endif %}
