@@ -860,6 +860,20 @@ button:hover {
     font-size: 0.92rem;
 }
 
+.post-music-head {
+    justify-content: space-between;
+}
+
+.post-music-toggle {
+    margin-left: auto;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.86);
+    padding: 0.36rem 0.72rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
 .comment-preview-list {
     display: grid;
     gap: 0.28rem;
