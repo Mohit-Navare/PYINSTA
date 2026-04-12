@@ -23,6 +23,24 @@
             <small id="char-count">0 / 2000</small>
         </div>
 
+        <div class="form-group">
+            <label for="musicQuery">Add music (optional)</label>
+            <div class="music-search-row">
+                <input type="text" id="musicQuery" placeholder="Search song name">
+                <button type="button" id="musicSearchBtn" class="btn">Search Music</button>
+            </div>
+            <small>Search Deezer and attach one 30-second preview to this post.</small>
+        </div>
+
+        <div id="musicResults" class="music-results" aria-live="polite"></div>
+        <div id="selectedMusic" class="selected-music"></div>
+
+        <input type="hidden" name="track_id" id="track_id">
+        <input type="hidden" name="track_title" id="track_title">
+        <input type="hidden" name="artist_name" id="artist_name">
+        <input type="hidden" name="album_cover" id="album_cover">
+        <input type="hidden" name="preview_url" id="preview_url">
+
         <button type="submit" class="btn btn-primary">Publish</button>
     </form>
 </div>
@@ -33,12 +51,118 @@
 document.addEventListener('DOMContentLoaded', function () {
     const textarea = document.getElementById('caption');
     const charCount = document.getElementById('char-count');
+    const searchBtn = document.getElementById('musicSearchBtn');
+    const musicQuery = document.getElementById('musicQuery');
+    const resultsDiv = document.getElementById('musicResults');
+    const selectedDiv = document.getElementById('selectedMusic');
 
-    if (!textarea || !charCount) return;
+    if (textarea && charCount) {
+        textarea.addEventListener('input', function () {
+            charCount.textContent = this.value.length + ' / 2000';
+        });
+    }
 
-    textarea.addEventListener('input', function () {
-        charCount.textContent = this.value.length + ' / 2000';
+    if (!searchBtn || !musicQuery || !resultsDiv || !selectedDiv) return;
+
+    searchBtn.addEventListener('click', searchMusic);
+    musicQuery.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            searchMusic();
+        }
     });
+
+    async function searchMusic() {
+        const query = musicQuery.value.trim();
+        resultsDiv.innerHTML = '';
+
+        if (!query) {
+            resultsDiv.innerHTML = '<p class="music-empty">Type a song name first.</p>';
+            return;
+        }
+
+        searchBtn.disabled = true;
+        searchBtn.textContent = 'Searching...';
+
+        try {
+            const response = await fetch(`/search-music?q=${encodeURIComponent(query)}`);
+            const result = await response.json();
+
+            if (!response.ok || !result.data || result.data.length === 0) {
+                resultsDiv.innerHTML = '<p class="music-empty">No songs found.</p>';
+                return;
+            }
+
+            result.data.forEach(function (track) {
+                const item = document.createElement('div');
+                item.className = 'music-result-item';
+
+                const cover = track.cover || '';
+                const preview = track.preview || '';
+                const title = track.title || 'Unknown title';
+                const artist = track.artist || 'Unknown artist';
+
+                item.innerHTML = `
+                    <div class="music-result-meta">
+                        ${cover ? `<img src="${cover}" alt="${title} cover">` : '<div class="music-cover-fallback">No Cover</div>'}
+                        <div class="music-track-copy">
+                            <strong>${title}</strong>
+                            <span>${artist}</span>
+                        </div>
+                    </div>
+                    ${preview ? `<audio controls src="${preview}"></audio>` : '<small class="music-muted">Preview unavailable for this track.</small>'}
+                    <button type="button" class="btn">Select</button>
+                `;
+
+                const selectBtn = item.querySelector('button');
+                selectBtn.addEventListener('click', function () {
+                    selectMusic(track);
+                });
+
+                resultsDiv.appendChild(item);
+            });
+        } catch (error) {
+            resultsDiv.innerHTML = '<p class="music-empty">Unable to fetch songs right now.</p>';
+        } finally {
+            searchBtn.disabled = false;
+            searchBtn.textContent = 'Search Music';
+        }
+    }
+
+    function selectMusic(track) {
+        document.getElementById('track_id').value = track.id || '';
+        document.getElementById('track_title').value = track.title || '';
+        document.getElementById('artist_name').value = track.artist || '';
+        document.getElementById('album_cover').value = track.cover || '';
+        document.getElementById('preview_url').value = track.preview || '';
+
+        const cover = track.cover || '';
+        const preview = track.preview || '';
+        const title = track.title || 'Unknown title';
+        const artist = track.artist || 'Unknown artist';
+
+        selectedDiv.innerHTML = `
+            <h4>Selected Music</h4>
+            <div class="selected-music-card">
+                ${cover ? `<img src="${cover}" alt="${title} cover">` : '<div class="music-cover-fallback">No Cover</div>'}
+                <div>
+                    <p><strong>${title}</strong> - ${artist}</p>
+                    ${preview ? `<audio controls src="${preview}"></audio>` : '<small class="music-muted">Preview unavailable for this track.</small>'}
+                </div>
+            </div>
+            <button type="button" id="clearSelectedMusic" class="btn btn-small">Remove selected music</button>
+        `;
+
+        const clearBtn = document.getElementById('clearSelectedMusic');
+        clearBtn.addEventListener('click', function () {
+            document.getElementById('track_id').value = '';
+            document.getElementById('track_title').value = '';
+            document.getElementById('artist_name').value = '';
+            document.getElementById('album_cover').value = '';
+            document.getElementById('preview_url').value = '';
+            selectedDiv.innerHTML = '';
+        });
+    }
 });
 </script>
 {% endblock %}
