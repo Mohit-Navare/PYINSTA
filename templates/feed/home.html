@@ -80,6 +80,23 @@
             </div>
             {% endif %}
 
+            {% if post.music and post.music.title %}
+            <div class="post-music-card">
+                <div class="post-music-head">
+                    {% if post.music.cover %}
+                    <img src="{{ post.music.cover }}" alt="{{ post.music.title }} cover" loading="lazy" decoding="async">
+                    {% endif %}
+                    <div>
+                        <strong>{{ post.music.title }}</strong>
+                        <span>{{ post.music.artist }}</span>
+                    </div>
+                </div>
+                {% if post.music.preview %}
+                <audio controls src="{{ post.music.preview }}"></audio>
+                {% endif %}
+            </div>
+            {% endif %}
+
             {% if post_comments %}
                 {% if post_comments|length > 2 %}
                 <button type="button" class="view-comments-btn toggle-comments" data-post-id="{{ post._id }}">View all <span class="comment-count">{{ post_comments|length }}</span> {{ 'comment' if post_comments|length == 1 else 'comments' }}</button>
