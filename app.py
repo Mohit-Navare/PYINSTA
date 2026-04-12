@@ -25,6 +25,7 @@ from email_validator import EmailNotValidError, validate_email
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, send_file, session, url_for
 from gridfs import GridFS
 from gridfs.errors import NoFile
+import requests
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
@@ -200,12 +201,13 @@ class Snap:
         return ext in Snap.ALLOWED_VIDEO_EXTENSIONS
 
     @staticmethod
-    def create_snap_doc(username: str, images: list, caption: str = "") -> dict:
+    def create_snap_doc(username: str, images: list, caption: str = "", music: dict | None = None) -> dict:
         """Create a snap/post document."""
         return {
             "username": username,
             "images": images,
             "caption": caption.strip() if caption else "",
+            "music": music or {},
             "likes": [],
             "comments": [],
             "created_at": datetime.now(),
@@ -1513,6 +1515,42 @@ def create_snap():
     return render_template("create_snap.html")
 
 
+@app.route("/search-music")
+@login_required
+def search_music():
+    """Search tracks from Deezer and return lightweight metadata for the create form."""
+    ensure_db()
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify({"data": []})
+
+    try:
+        response = requests.get(
+            "https://api.deezer.com/search",
+            params={"q": query},
+            timeout=10,
+        )
+        response.raise_for_status()
+        deezer_data = response.json()
+    except requests.RequestException as exc:
+        logger.error("Deezer search error for query '%s': %s", query, exc)
+        return jsonify({"data": [], "error": "Unable to fetch music right now."}), 502
+
+    songs = []
+    for track in deezer_data.get("data", [])[:10]:
+        songs.append(
+            {
+                "id": track.get("id"),
+                "title": track.get("title"),
+                "artist": (track.get("artist") or {}).get("name"),
+                "cover": (track.get("album") or {}).get("cover_medium"),
+                "preview": track.get("preview"),
+            }
+        )
+
+    return jsonify({"data": songs})
+
+
 @app.route("/upload", methods=["POST"])
 @login_required
 def upload():
@@ -1525,6 +1563,15 @@ def upload():
 
     files = request.files.getlist("images")
     caption = request.form.get("caption", "").strip()
+    music_data = {
+        "track_id": request.form.get("track_id", "").strip(),
+        "title": request.form.get("track_title", "").strip(),
+        "artist": request.form.get("artist_name", "").strip(),
+        "cover": request.form.get("album_cover", "").strip(),
+        "preview": request.form.get("preview_url", "").strip(),
+    }
+    has_music_selection = any(music_data.values())
+    music_payload = music_data if has_music_selection else {}
 
     valid, message = Snap.validate_caption(caption)
     if not valid:
@@ -1552,7 +1599,7 @@ def upload():
         return redirect(url_for("create_snap"))
 
     try:
-        snap_doc = Snap.create_snap_doc(session["username"], saved_media_items, caption)
+        snap_doc = Snap.create_snap_doc(session["username"], saved_media_items, caption, music_payload)
         posts.insert_one(snap_doc)
         logger.info("Post created by %s", session["username"])
         flash("Post published successfully.", "success")
