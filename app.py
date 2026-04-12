@@ -1462,6 +1462,7 @@ def home():
                     "likes": 1,
                     "comments": 1,
                     "caption": 1,
+                    "music": 1,
                     "created_at": 1,
                 },
             )
