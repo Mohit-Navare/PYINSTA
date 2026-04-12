@@ -507,6 +507,80 @@ button:hover {
     font-size: 0.8rem;
 }
 
+.music-search-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.6rem;
+}
+
+.music-results,
+.selected-music {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.music-empty,
+.music-muted {
+    margin: 0;
+    color: var(--muted);
+}
+
+.music-result-item,
+.selected-music-card,
+.post-music-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.72);
+    display: grid;
+    gap: 0.6rem;
+}
+
+.music-result-meta,
+.selected-music-card,
+.post-music-head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.music-result-meta img,
+.selected-music-card img,
+.post-music-head img {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.music-cover-fallback {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 10px;
+    border: 1px dashed var(--line);
+    display: grid;
+    place-items: center;
+    font-size: 0.7rem;
+    color: var(--muted);
+}
+
+.music-track-copy {
+    display: grid;
+    gap: 0.08rem;
+}
+
+.music-track-copy span,
+.post-music-head span {
+    color: var(--muted);
+    font-size: 0.88rem;
+}
+
+.music-result-item audio,
+.selected-music-card audio,
+.post-music-card audio {
+    width: 100%;
+}
+
 .feed-page {
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr);
@@ -779,6 +853,11 @@ button:hover {
 .post-caption-line strong,
 .comment-inline strong {
     font-weight: 800;
+}
+
+.post-music-head strong {
+    display: block;
+    font-size: 0.92rem;
 }
 
 .comment-preview-list {
@@ -2035,4 +2114,3 @@ button:hover {
         transform: none !important;
     }
 }
-
